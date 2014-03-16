@@ -218,9 +218,9 @@ public class SpeedUp {
 			double fromSp, toSp;
 			
 			ArrayList<Integer> tt = new ArrayList<Integer>();
-			int j = -1;
+			//int j = -1;
 			for (Calendar currentTime : currentTimes) {
-				j++;
+				//j++;
 				//gbw.write(String.format("CurrentTime[%d] = %s\n", j, oracleDF.format(currentTime.getTime())));
 				if (!currentTime.before(fromRes.get(fromIndex+1).getFirst())) {
 					fromIndex++;
