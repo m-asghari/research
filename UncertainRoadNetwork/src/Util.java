@@ -48,13 +48,6 @@ public class Util {
 		return conn;
 	}
 	
-	public static OracleResultSet runQuery(OracleConnection conn, String query, Pair<String, String> replacements) throws SQLException{
-		OracleResultSet ors = null;
-		Statement stm = conn.createStatement();
-		ors = (OracleResultSet) stm.executeQuery(query);
-		return ors;
-	}
-	
 	public static Calendar RoundTimeDown(Calendar input) {
 		int minutes = input.get(Calendar.MINUTE);
 		int offset = minutes % 5;
