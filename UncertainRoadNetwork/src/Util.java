@@ -4,7 +4,8 @@ import java.io.FileReader;
 import java.sql.DriverManager;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.sql.Statement;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -29,6 +30,8 @@ public class Util {
 	private static final String service = "adms";
 	private static final String username = "sch_sensor";
 	private static final String password = "phe334";
+	
+	public static DateFormat oracleDF = new SimpleDateFormat("dd-MMM-yy hh.mm.ss.SSS a");
 	
 	public static OracleConnection getConnection()
 	{

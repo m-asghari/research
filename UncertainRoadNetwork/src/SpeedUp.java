@@ -116,6 +116,11 @@ public class SpeedUp {
 			e.printStackTrace();
 		}
 	}
+	
+	public static double ToMinutes(Calendar start, Calendar end) {
+		long travelTimeInMillis = end.getTimeInMillis() - start.getTimeInMillis();
+		return (double)(travelTimeInMillis)/(1000*60);		
+	}
 
 	private static ArrayList<String> InitializeResults() {
 		ArrayList<String> results = new ArrayList<String>();
@@ -136,8 +141,8 @@ public class SpeedUp {
 		return results;
 	}
 
-	private static ArrayList<Calendar> TravelTime(String pathNumber, String[] sensorList,
-			ArrayList<Calendar> startTimes) throws SQLException, ParseException, IOException{
+	public static ArrayList<Calendar> TravelTime(String pathNumber, String[] sensorList,
+			ArrayList<Calendar> startTimes) throws SQLException, ParseException{
 		OracleConnection conn = Util.getConnection();
 		ArrayList<Calendar> currentTimes = new ArrayList<Calendar>();
 		for (Calendar cal : startTimes)

@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+
 
 public class NormalDist {
 	public double mean;
@@ -17,6 +19,17 @@ public class NormalDist {
 		for (double input : inputs)
 			sum += Math.pow(input - this.mean, 2);
 		this.var = sum / inputs.length;
+	}
+	
+	public NormalDist(ArrayList<Double> inputs) {
+		Double sum = 0.0;
+		for (Double input : inputs)
+			sum += input;
+		this.mean = sum / inputs.size();
+		sum = 0.0;
+		for (Double input : inputs)
+			sum += Math.pow(input - this.mean, 2);
+		this.var = sum / inputs.size();
 	}
 	
 	public NormalDist Add(NormalDist other) {
