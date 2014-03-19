@@ -8,6 +8,8 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
 
 import oracle.jdbc.driver.OracleConnection;
 import oracle.jdbc.driver.OracleResultSet;
@@ -28,6 +30,9 @@ public class SpeedUp {
 	private static String edgeDistanceQueryTemplate = Util.readQuery("QueryTemplates\\SelectEdgeDistance.sql");
 	private static String sensorSpeedsQueryTemplate = Util.readQuery("QueryTemplates\\SelectSensorSpeeds.sql");
 	private static String sensorAvgSpeedQueryTemplate = Util.readQuery("QueryTemplates\\SelectSensorAvgSpeed.sql");
+	private static String timeInDepTravelTimeTemplate = Util.readQuery("QueryTemplates\\SelectTimeIndepTT.sql");
+	private static String timeDepTravelTimeTemplate = Util.readQuery("QueryTemplates\\SelectTimeDepTT.sql");
+	private static String avgTravleTimeTemplate = Util.readQuery("QueryTemplates\\SelectAvgTT.sql");
 	
 	private static FileWriter gfw;
 	private static BufferedWriter gbw;
@@ -141,6 +146,106 @@ public class SpeedUp {
 		return results;
 	}
 
+	public static ArrayList<Calendar> TimeInependentTravelTime(String pathNumber, 
+			String[] sensorList, ArrayList<Calendar> startTimes) throws SQLException, ParseException{
+		OracleConnection conn = Util.getConnection();
+		ArrayList<Calendar> retTimes = new ArrayList<Calendar>();
+		for (Calendar cal : startTimes)
+			retTimes.add((Calendar)cal.clone());
+		
+		HashMap<String, Double> travelTimes = new HashMap<String, Double>();
+		Statement avgStm = conn.createStatement();
+		//select From, AVG(Travel_Time) From Path#_Edge_Patterns Group By From;
+		String avgQuery = avgTravleTimeTemplate
+				.replace("##PATH_NUM##", pathNumber);
+		OracleResultSet avgOrs = (OracleResultSet) avgStm.executeQuery(avgQuery);
+		while (avgOrs.next()) {
+			String from = avgOrs.getString(1);
+			Double tt = avgOrs.getDouble(2);
+			travelTimes.put(from, tt);
+		}
+		
+		for (Calendar startTime : startTimes) {
+			Statement stm = conn.createStatement();
+			//select From, TravelTime From PathN_Edge_Patterns where time >= start_time and time <= end_time;
+			String qStartTime = Util.oracleDF.format(Util.RoundTimeDown((Calendar)startTime.clone()));
+			String qEndTime = Util.oracleDF.format(Util.RoundTimeUp((Calendar)startTime.clone()));
+			String query = timeInDepTravelTimeTemplate
+					.replace("##PATH_NUM##", pathNumber)
+					.replace("##START_TIME##", qStartTime)
+					.replace("##END_TIME##", qEndTime);
+			OracleResultSet ors = (OracleResultSet) stm.executeQuery(query);
+			while (ors.next()) {
+				String from = ors.getString(1);
+				Double tt = ors.getDouble(2);
+				travelTimes.put(from, tt);
+			}
+			ors.close();
+			stm.close();
+			
+			Double sum = 0.0;
+			for (Map.Entry<String, Double> e : travelTimes.entrySet())
+				sum += e.getValue();
+			Calendar endTime = Calendar.getInstance();
+			endTime.setTime(startTime.getTime());
+			endTime.add(Calendar.MINUTE, sum.intValue());
+			retTimes.add(endTime);
+		}
+		conn.close();
+		return retTimes;
+	}
+	
+	public static ArrayList<Calendar> TimeDependentTravelTime(String pathNumber,
+			String[] sensorList, ArrayList<Calendar> startTimes) throws SQLException, ParseException{
+		OracleConnection conn = Util.getConnection();
+		ArrayList<Calendar> currentTimes = new ArrayList<Calendar>();
+		for (Calendar cal : startTimes)
+			currentTimes.add((Calendar)cal.clone());
+		
+		Calendar lbTime = Calendar.getInstance();
+		lbTime.setTime(startTimes.get(0).getTime());
+		lbTime.add(Calendar.YEAR, -1);
+		Calendar ubTime = Calendar.getInstance();
+		ubTime.setTime(startTimes.get(0).getTime());
+		ubTime.add(Calendar.YEAR, 1);
+		
+		for (int s = 0; s < sensorList.length - 1; ++s) {
+			String from = sensorList[s];
+			String to = sensorList[s+1];
+			
+			//select Time, TravelTime from Path#_Edge_Patterns where time >= start_time and time < end_time and from = from and to = to order by time;
+			String startTime = Util.oracleDF.format(Util.RoundTimeDown((Calendar)currentTimes.get(0).clone()));
+			String endTime = Util.oracleDF.format(Util.RoundTimeUp((Calendar)currentTimes.get(currentTimes.size()-1).clone()));
+			String query = timeDepTravelTimeTemplate
+					.replace("##PATH_NUM##", pathNumber)
+					.replace("##FROM##", from)
+					.replace("##TO##", to)
+					.replace("##START_TIME##", startTime)
+					.replace("##END_TIME##", endTime);
+			Statement stm = conn.createStatement();
+			OracleResultSet ors = (OracleResultSet) stm.executeQuery(query);
+			ArrayList<Pair<Calendar, Double>> travelTimes = new ArrayList<Pair<Calendar,Double>>();
+			travelTimes.add(new Pair<Calendar, Double>(lbTime, 45.0));
+			while (ors.next()) {
+				Calendar time = Calendar.getInstance();
+				time.setTime(ors.getTimestamp(1));
+				Double tt = ors.getDouble(2);
+				travelTimes.add(new Pair<Calendar, Double>(time, tt));
+			}
+			travelTimes.add(new Pair<Calendar, Double>(ubTime, 45.0));
+			
+			int p = 0;
+			for (int i = 0; i < currentTimes.size(); ++i) {
+				if (!currentTimes.get(i).before(travelTimes.get(p+1).getFirst())) {
+					p++;
+				}
+				currentTimes.get(i).add(Calendar.SECOND, travelTimes.get(p).getSecond().intValue());
+			}
+		}
+		conn.close();
+		return currentTimes;
+	}
+	
 	public static ArrayList<Calendar> TravelTime(String pathNumber, String[] sensorList,
 			ArrayList<Calendar> startTimes) throws SQLException, ParseException{
 		OracleConnection conn = Util.getConnection();
