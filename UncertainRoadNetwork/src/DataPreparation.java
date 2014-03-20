@@ -96,7 +96,8 @@ public class DataPreparation {
 						.replace("##PATH_NUM##", pathNumber)
 						.replace("##FROM##", fromLink)
 						.replace("##TO##", toLink)
-						.replace("##DISTANCE##", dist);
+						.replace("##DISTANCE##", dist)
+						.replace("##MAX_SPEED##", Double.toString(65.0));
 				sb.append(insertQuery);
 				//Statement insStm = conn.createStatement();
 				//insStm.execute(insertQuery);
@@ -198,9 +199,9 @@ public class DataPreparation {
 	}
 
 	public static void main(String[] args) {
-		String path = "768701-774344-718405-759858-759850-759835-759844-759822-718393-718392-717006-715996-716573-717613-716571-717610-717608-764101-768066-717490-717489-717488-764766-717486-769405-769403-717484-769388-717481-769373-717472-717468-717466-717462-717461-717458-716339-717453-717450-717446-716331-716328-764853-760643-760635-774671-718166";
+		String path = "768701-774344-770599-768297-768283-770587-770012-770024-770036-770354-770048-770331-770544-770061-770556-770076-771202-770089-770103-770475-770487-770116-769895-769880-769866-769847-767610-767598-718076-767471-718072-767454-762329-767621-767573-718066-767542-718064-767495-716955-716949-760650-718045-760643-760635-774671-718166";
 		String[] sensorList = path.split("-");
-		int pathNum = 3;
+		int pathNum = 2;
 		try {
 			GeneratePathQueries(Integer.toString(pathNum), sensorList);
 		}

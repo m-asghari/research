@@ -153,7 +153,7 @@ public class SpeedUp {
 		for (Calendar cal : startTimes)
 			retTimes.add((Calendar)cal.clone());
 		
-		HashMap<String, Double> travelTimes = new HashMap<String, Double>();
+		HashMap<String, Double> avgTravelTimes = new HashMap<String, Double>();
 		Statement avgStm = conn.createStatement();
 		//select From, AVG(Travel_Time) From Path#_Edge_Patterns Group By From;
 		String avgQuery = avgTravleTimeTemplate
@@ -162,10 +162,12 @@ public class SpeedUp {
 		while (avgOrs.next()) {
 			String from = avgOrs.getString(1);
 			Double tt = avgOrs.getDouble(2);
-			travelTimes.put(from, tt);
+			avgTravelTimes.put(from, tt);
 		}
 		
 		for (Calendar startTime : startTimes) {
+			@SuppressWarnings("unchecked")
+			HashMap<String, Double> travelTimes = (HashMap<String, Double>) avgTravelTimes.clone();
 			Statement stm = conn.createStatement();
 			//select From, TravelTime From PathN_Edge_Patterns where time >= start_time and time <= end_time;
 			String qStartTime = Util.oracleDF.format(Util.RoundTimeDown((Calendar)startTime.clone()));
@@ -195,8 +197,8 @@ public class SpeedUp {
 		return retTimes;
 	}
 	
-	public static ArrayList<Calendar> TimeDependentTravelTime(String pathNumber,
-			String[] sensorList, ArrayList<Calendar> startTimes) throws SQLException, ParseException{
+	public static ArrayList<Calendar> SingleDayTimeDependantTravelTime(String pathNumber,
+			String[] sensorList, ArrayList<Calendar> startTimes) throws SQLException, ParseException {
 		OracleConnection conn = Util.getConnection();
 		ArrayList<Calendar> currentTimes = new ArrayList<Calendar>();
 		for (Calendar cal : startTimes)
@@ -244,6 +246,17 @@ public class SpeedUp {
 		}
 		conn.close();
 		return currentTimes;
+	}
+	
+	public static ArrayList<Calendar> TimeDependentTravelTime(String pathNumber,
+			String[] sensorList, ArrayList<Calendar> startTimes) throws SQLException, ParseException{
+		ArrayList<Calendar> endTimes = new ArrayList<Calendar>();
+		for (Calendar startTime : startTimes) {
+			ArrayList<Calendar> temp = new ArrayList<Calendar>();
+			temp.add((Calendar)startTime.clone());
+			endTimes.add(SingleDayTimeDependantTravelTime(pathNumber, sensorList, temp).get(0));
+		}
+		return endTimes;
 	}
 	
 	public static ArrayList<Calendar> TravelTime(String pathNumber, String[] sensorList,

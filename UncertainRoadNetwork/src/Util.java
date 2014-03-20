@@ -4,8 +4,11 @@ import java.io.FileReader;
 import java.sql.DriverManager;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -32,6 +35,9 @@ public class Util {
 	private static final String password = "phe334";
 	
 	public static DateFormat oracleDF = new SimpleDateFormat("dd-MMM-yy hh.mm.ss.SSS a");
+	public static DateFormat timeOfDayDF = new SimpleDateFormat("HH:mm:ss");
+	
+	private static String pmfQueryTemplate = readQuery("QueryTemplates\\pmfQuery.sql");
 	
 	public static OracleConnection getConnection()
 	{
@@ -148,5 +154,48 @@ public class Util {
 			e.printStackTrace();
 		}		
 		return doc;
+	}
+	
+	private static ArrayList<Double> getTravelTimes(String pathNumber, String from, String to, Calendar time,
+			ArrayList<Integer> days) throws SQLException, ParseException {
+		OracleConnection conn = getConnection();
+		Statement stm = conn.createStatement();
+		String startTime = timeOfDayDF.format(RoundTimeDown((Calendar)time.clone()));
+		String endTime = timeOfDayDF.format(RoundTimeUp((Calendar)time.clone()));
+		//SELECT TIME, TRAVEL_TIME FROM PATH#_EDGE_PATTERNS WHERE FROM, TO, START <= TOD AND END >= TOD
+		String query = pmfQueryTemplate
+				.replace("##PATH_NUM##", pathNumber)
+				.replace("##FROM##", from)
+				.replace("##TO##", to)
+				.replace("##START_TIME##", startTime)
+				.replace("##END_TIME##", endTime);
+		OracleResultSet ors = (OracleResultSet) stm.executeQuery(query);
+		ArrayList<Double> travelTimes = new ArrayList<Double>();
+		int daysIdx = 0;
+		while (ors.next()) {
+			Calendar dayCal = Calendar.getInstance();
+			dayCal.setTime(oracleDF.parse(ors.getString(1)));
+			Integer day = dayCal.get(Calendar.DAY_OF_YEAR);
+			while (days.get(daysIdx) < day) 
+				if (daysIdx < days.size() - 1) 
+					daysIdx++;
+			if (days.get(daysIdx) == day)
+				travelTimes.add(ors.getDouble(2));
+		}
+		ors.close();
+		stm.close();
+		conn.close();
+		return travelTimes;
+	}
+	public static NormalDist getNormalDist(String pathNumber, String from, String to, Calendar time,
+			ArrayList<Integer> days) throws SQLException, ParseException {
+		ArrayList<Double> travelTimes = getTravelTimes(pathNumber, from, to, time, days);
+		return new NormalDist(travelTimes);
+	}
+	
+	public static PMF getPMF(String pathNumber, String from, String to, Calendar time,
+			ArrayList<Integer> days) throws SQLException, ParseException{
+		ArrayList<Double> travelTimes = getTravelTimes(pathNumber, from, to, time, days);
+		return new PMF(travelTimes);
 	}
 }

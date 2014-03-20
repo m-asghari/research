@@ -8,6 +8,13 @@ public class PMF {
 	public int max;
 	public HashMap<Integer, Double> prob;
 	
+	public PMF() {
+		this.min = 0;
+		this.max = 0;
+		this.prob = new HashMap<Integer, Double>();
+		this.prob.put(0, 1.0);		
+	}
+	
 	public PMF(int min, int max) {
 		this.min = min;
 		this.max = max;
