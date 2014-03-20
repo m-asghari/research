@@ -35,11 +35,11 @@ public class StartTimeGenerator {
 		this.nextDay.put(Calendar.FRIDAY, input[6]);
 	}
 	
-	public ArrayList<Calendar> GetStartTimes(Calendar startFrom) 
+	public ArrayList<Calendar> GetStartTimes() 
 			throws ParseException{
 		ArrayList<Calendar> startTimes = new ArrayList<Calendar>();
 		Calendar start = Calendar.getInstance();
-		start.setTime(startFrom.getTime());
+		start.setTime(this.startTime.getTime());
 		Calendar end = Calendar.getInstance();
 		end.setTime(Util.oracleDF.parse("01-JAN-14 00.00.00.000 AM"));
 		while (start.before(end)) {

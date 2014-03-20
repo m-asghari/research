@@ -30,10 +30,18 @@ public class NormalDist {
 		for (Double input : inputs)
 			sum += Math.pow(input - this.mean, 2);
 		this.var = sum / inputs.size();
+		if (inputs.size() == 0) {
+			this.mean = 0;
+			this.var = 0;
+		}
 	}
 	
 	public NormalDist Add(NormalDist other) {
 		return new NormalDist(this.mean + other.mean, this.var + other.var);
+	}
+	
+	public String toString() {
+		return String.format("Mean: %f Var: %f\n", this.mean, this.var);		
 	}
 
 }

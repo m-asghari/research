@@ -16,9 +16,8 @@ public class Approach2 {
 		
 		PMF retPMF = new PMF();
 		for (int s = 0; s < sensorList.length - 1; ++s) {
-			String from = sensorList[s];
-			String to = sensorList[s+1];	
-			PMF edgePMF = Util.getPMF(pathNumber, from, to, tod, days);
+			String from = sensorList[s];	
+			PMF edgePMF = Util.getPMF(pathNumber, from, tod, days);
 			PMF newPMF = new PMF(retPMF.min + edgePMF.min, retPMF.max + edgePMF.max);
 			for (int b = newPMF.min; b <= newPMF.max; ++b) {
 				Double sum = 0.0;
@@ -35,10 +34,7 @@ public class Approach2 {
 	//Checked Wed, Compatible with SpeedUp.TimeIndependentTravelTime
 	public static PMF GenerateActual(String pathNumber, String[] sensorList, 
 			ArrayList<Calendar> startTimes) throws SQLException, ParseException {
-		ArrayList<Calendar> endTimes = SpeedUp.TimeInependentTravelTime(pathNumber, sensorList, startTimes);
-		ArrayList<Double> travelTimes = new ArrayList<Double>();
-		for (int i = 0; i < startTimes.size(); ++i)
-			travelTimes.add(SpeedUp.ToMinutes(startTimes.get(i), endTimes.get(i)));
+		ArrayList<Double> travelTimes = SpeedUp.TimeInependentTravelTime(pathNumber, sensorList, startTimes);
 		PMF retPMF = new PMF(travelTimes);
 		return retPMF;
 	}

@@ -16,7 +16,6 @@ public class Approach4 {
 		PMF retPMF = new PMF();
 		for (int s = 0; s < sensorList.length - 1; ++s) {
 			String from = sensorList[s];
-			String to = sensorList[s+1];
 			int min = retPMF.min;
 			int max = retPMF.max;
 			HashMap<Integer, PMF> edgePMFs = new HashMap<Integer, PMF>();
@@ -24,7 +23,7 @@ public class Approach4 {
 				Calendar time = Calendar.getInstance();
 				time.setTime(Util.timeOfDayDF.parse(timeOfDay));
 				time.add(Calendar.MINUTE, i);
-				edgePMFs.put(i, Util.getPMF(pathNumber, from, to, time, days));
+				edgePMFs.put(i, Util.getPMF(pathNumber, from, time, days));
 			}
 			PMF newPMF = new PMF(retPMF.min + edgePMFs.get(min).min, retPMF.max + edgePMFs.get(max).max);
 			for (int b = newPMF.min; b <= newPMF.max; ++b) {

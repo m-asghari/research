@@ -49,13 +49,19 @@ public class PMF {
 			int newValue = (int) input;
 			this.min = (this.min > newValue) ? newValue : this.min;
 			this.max = (this.max < newValue) ? newValue : this.max;
-			counts.put(newValue, counts.get(newValue) + 1);
+			Integer prev = (counts.get(newValue) == null) ? 0 : counts.get(newValue);
+			counts.put(newValue, prev + 1);
 			totalCount++;
 		}
 		this.prob = new HashMap<Integer, Double>();
 		for (Entry<Integer, Integer> e : counts.entrySet()) {
 			double newProb = (double)e.getValue()/totalCount;
 			this.prob.put(e.getKey(), newProb);
+		}
+		if (totalCount == 0) {
+			this.min = 0;
+			this.max = 0;
+			this.prob.put(0, 1.0);
 		}
 	}
 	
@@ -74,5 +80,13 @@ public class PMF {
 			retPMF.prob.put(h, sum);
 		}
 		return retPMF;
+	}
+	
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		for (Entry<Integer, Double> e : this.prob.entrySet())
+			sb.append(String.format("P(%d): %f\t", e.getKey(), e.getValue()));
+		sb.append("\n");
+		return sb.toString();
 	}
 }

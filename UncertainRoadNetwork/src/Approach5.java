@@ -19,8 +19,7 @@ public class Approach5 {
 		
 		for (int s = 0; s < sensorList.length - 1; ++s) {
 			String from = sensorList[s];
-			String to = sensorList[s+1];
-			allTravelTimes.put(from, Util.getTravelTimes(pathNumber, from, to, tod, days));
+			allTravelTimes.put(from, Util.getTravelTimes(pathNumber, from, tod, days));
 		}
 		
 		NormalDist retDist = new NormalDist(0, 0);

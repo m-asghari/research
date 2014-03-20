@@ -146,12 +146,10 @@ public class SpeedUp {
 		return results;
 	}
 
-	public static ArrayList<Calendar> TimeInependentTravelTime(String pathNumber, 
+	public static ArrayList<Double> TimeInependentTravelTime(String pathNumber, 
 			String[] sensorList, ArrayList<Calendar> startTimes) throws SQLException, ParseException{
 		OracleConnection conn = Util.getConnection();
-		ArrayList<Calendar> retTimes = new ArrayList<Calendar>();
-		for (Calendar cal : startTimes)
-			retTimes.add((Calendar)cal.clone());
+		ArrayList<Double> retTimes = new ArrayList<Double>();
 		
 		HashMap<String, Double> avgTravelTimes = new HashMap<String, Double>();
 		Statement avgStm = conn.createStatement();
@@ -170,8 +168,8 @@ public class SpeedUp {
 			HashMap<String, Double> travelTimes = (HashMap<String, Double>) avgTravelTimes.clone();
 			Statement stm = conn.createStatement();
 			//select From, TravelTime From PathN_Edge_Patterns where time >= start_time and time <= end_time;
-			String qStartTime = Util.oracleDF.format(Util.RoundTimeDown((Calendar)startTime.clone()));
-			String qEndTime = Util.oracleDF.format(Util.RoundTimeUp((Calendar)startTime.clone()));
+			String qStartTime = Util.oracleDF.format(Util.RoundTimeDown((Calendar)startTime.clone()).getTime());
+			String qEndTime = Util.oracleDF.format(Util.RoundTimeUp((Calendar)startTime.clone()).getTime());
 			String query = timeInDepTravelTimeTemplate
 					.replace("##PATH_NUM##", pathNumber)
 					.replace("##START_TIME##", qStartTime)
@@ -188,10 +186,7 @@ public class SpeedUp {
 			Double sum = 0.0;
 			for (Map.Entry<String, Double> e : travelTimes.entrySet())
 				sum += e.getValue();
-			Calendar endTime = Calendar.getInstance();
-			endTime.setTime(startTime.getTime());
-			endTime.add(Calendar.MINUTE, sum.intValue());
-			retTimes.add(endTime);
+			retTimes.add(sum);
 		}
 		conn.close();
 		return retTimes;
