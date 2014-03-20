@@ -1,8 +1,6 @@
 import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
 import java.io.FileReader;
 import java.sql.DriverManager;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.DateFormat;
@@ -11,20 +9,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-
 import oracle.jdbc.OracleDriver;
 import oracle.jdbc.driver.OracleConnection;
 import oracle.jdbc.driver.OracleResultSet;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 
 public class Util {
 	
@@ -99,64 +86,7 @@ public class Util {
 		return query;
 	}
 	
-	public static Document toXML(OracleResultSet ors)
-	{
-		Document doc = null;
-		try
-		{
-			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-			DocumentBuilder builder = factory.newDocumentBuilder();
-			doc = builder.newDocument();
-		}
-		catch (ParserConfigurationException e)
-		{
-			e.printStackTrace();
-		}		
-		
-		Element results = doc.createElement("Results");
-		doc.appendChild(results);
-		
-		ResultSetMetaData rsmt = null;
-		int colCount;
-		try
-		{
-			rsmt = ors.getMetaData();
-			colCount = rsmt.getColumnCount(); 	
-			while (ors.next())
-			{
-				Element row = doc.createElement("Row");
-				results.appendChild(row);
-				
-				for (int i = 1; i <= colCount; i++)
-				{
-					String columnName = rsmt.getColumnName(i);
-					Object value = ors.getObject(i);
-					
-					Element node = doc.createElement(columnName);
-					node.appendChild(doc.createTextNode((value != null) ? value.toString() : "null"));
-					row.appendChild(node);
-				}
-			}
-		}
-		catch (SQLException e)
-		{
-			e.printStackTrace();
-		}
-		try
-		{
-			Transformer transformer = TransformerFactory.newInstance().newTransformer();
-			ByteArrayOutputStream os = new ByteArrayOutputStream();
-			transformer.transform(new DOMSource(doc), new StreamResult(os));
-			System.out.println(os.toString("UTF-8"));
-		}
-		catch (Exception e)
-		{
-			e.printStackTrace();
-		}		
-		return doc;
-	}
-	
-	private static ArrayList<Double> getTravelTimes(String pathNumber, String from, String to, Calendar time,
+	public static ArrayList<Double> getTravelTimes(String pathNumber, String from, String to, Calendar time,
 			ArrayList<Integer> days) throws SQLException, ParseException {
 		OracleConnection conn = getConnection();
 		Statement stm = conn.createStatement();
@@ -187,6 +117,7 @@ public class Util {
 		conn.close();
 		return travelTimes;
 	}
+	
 	public static NormalDist getNormalDist(String pathNumber, String from, String to, Calendar time,
 			ArrayList<Integer> days) throws SQLException, ParseException {
 		ArrayList<Double> travelTimes = getTravelTimes(pathNumber, from, to, time, days);
@@ -197,5 +128,32 @@ public class Util {
 			ArrayList<Integer> days) throws SQLException, ParseException{
 		ArrayList<Double> travelTimes = getTravelTimes(pathNumber, from, to, time, days);
 		return new PMF(travelTimes);
+	}
+
+	public static Double PearsonCorrCoef(ArrayList<Double> X, ArrayList<Double> Y) {
+		int size = Math.min(X.size(), Y.size());
+		Double sumX = 0.0, sumY = 0.0;
+		for (int i = 0; i < size; ++i) {
+			sumX += X.get(i);
+			sumY += Y.get(i);
+		}
+		Double avgX = sumX / size;
+		Double avgY = sumY / size;
+		
+		sumX = sumY = 0.0;
+		for (int i = 0; i < size; ++i) {
+			sumX += Math.pow(X.get(i) - avgX, 2);
+			sumY += Math.pow(Y.get(i) - avgY, 2);
+		}
+		Double stdX = Math.sqrt(sumX / size);
+		Double stdY = Math.sqrt(sumY / size);
+		
+		Double sum = 0.0;
+		for (int i = 0; i < size; ++i) {
+			sum += (X.get(i) - avgX) * (Y.get(i) - avgY);
+		}
+		
+		Double retVal = sum / (stdX * stdY * (size - 1));
+		return retVal;
 	}
 }
