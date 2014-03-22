@@ -33,7 +33,7 @@ public class Pair<A, B> {
 
     public String toString()
     { 
-           return "(" + first + ", " + second + ")"; 
+           return "(" + first.toString() + ", " + second.toString() + ")"; 
     }
 
     public A getFirst() {

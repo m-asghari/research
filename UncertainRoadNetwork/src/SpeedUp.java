@@ -33,6 +33,7 @@ public class SpeedUp {
 	private static String timeInDepTravelTimeTemplate = Util.readQuery("QueryTemplates\\SelectTimeIndepTT.sql");
 	private static String timeDepTravelTimeTemplate = Util.readQuery("QueryTemplates\\SelectTimeDepTT.sql");
 	private static String avgTravleTimeTemplate = Util.readQuery("QueryTemplates\\SelectAvgTT.sql");
+	private static String avgLinkTravleTimeTemplate = Util.readQuery("QueryTemplates\\SelectAvgLinkTT.sql");
 	
 	private static FileWriter gfw;
 	private static BufferedWriter gbw;
@@ -210,9 +211,20 @@ public class SpeedUp {
 			String from = sensorList[s];
 			String to = sensorList[s+1];
 			
+			Double avgTravelTimes = 1.0;
+			Statement avgStm = conn.createStatement();
+			//select AVG(Travel_Time) From Path#_Edge_Patterns WHERE "FROM" = FROM;
+			String avgQuery = avgLinkTravleTimeTemplate
+					.replace("##PATH_NUM##", pathNumber)
+					.replace("##FROM##", from);
+			OracleResultSet avgOrs = (OracleResultSet) avgStm.executeQuery(avgQuery);
+			while (avgOrs.next()) {
+				avgTravelTimes = avgOrs.getDouble(1);
+			}
+			
 			//select Time, TravelTime from Path#_Edge_Patterns where time >= start_time and time < end_time and from = from and to = to order by time;
-			String startTime = Util.oracleDF.format(Util.RoundTimeDown((Calendar)currentTimes.get(0).clone()));
-			String endTime = Util.oracleDF.format(Util.RoundTimeUp((Calendar)currentTimes.get(currentTimes.size()-1).clone()));
+			String startTime = Util.oracleDF.format(Util.RoundTimeDown((Calendar)currentTimes.get(0).clone()).getTime());
+			String endTime = Util.oracleDF.format(Util.RoundTimeUp((Calendar)currentTimes.get(currentTimes.size()-1).clone()).getTime());
 			String query = timeDepTravelTimeTemplate
 					.replace("##PATH_NUM##", pathNumber)
 					.replace("##FROM##", from)
@@ -222,21 +234,22 @@ public class SpeedUp {
 			Statement stm = conn.createStatement();
 			OracleResultSet ors = (OracleResultSet) stm.executeQuery(query);
 			ArrayList<Pair<Calendar, Double>> travelTimes = new ArrayList<Pair<Calendar,Double>>();
-			travelTimes.add(new Pair<Calendar, Double>(lbTime, 45.0));
+			travelTimes.add(new Pair<Calendar, Double>(lbTime, avgTravelTimes));
 			while (ors.next()) {
 				Calendar time = Calendar.getInstance();
 				time.setTime(ors.getTimestamp(1));
 				Double tt = ors.getDouble(2);
 				travelTimes.add(new Pair<Calendar, Double>(time, tt));
 			}
-			travelTimes.add(new Pair<Calendar, Double>(ubTime, 45.0));
+			travelTimes.add(new Pair<Calendar, Double>(ubTime, avgTravelTimes));
 			
 			int p = 0;
 			for (int i = 0; i < currentTimes.size(); ++i) {
 				if (!currentTimes.get(i).before(travelTimes.get(p+1).getFirst())) {
 					p++;
 				}
-				currentTimes.get(i).add(Calendar.SECOND, travelTimes.get(p).getSecond().intValue());
+				Double seconds = travelTimes.get(p).getSecond() * 60.0;
+				currentTimes.get(i).add(Calendar.SECOND, seconds.intValue());
 			}
 		}
 		conn.close();

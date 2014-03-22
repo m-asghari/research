@@ -16,8 +16,8 @@ public class Main {
 			ArrayList<Integer> days = new ArrayList<Integer>();
 			for (Calendar startTime : modelStartTimes)
 				days.add(startTime.get(Calendar.DAY_OF_YEAR));
-			PMF model = Approach2.GenerateModel(pathNumber, sensorList, timeOfDay, days);
-			PMF test = Approach2.GenerateActual(pathNumber, sensorList, modelStartTimes);
+			Pair<PMF, PMF> model = Approach6.GenerateModel(pathNumber, sensorList, timeOfDay, days);
+			PMF test = Approach6.GenerateActual(pathNumber, sensorList, modelStartTimes);
 			System.out.print(model.toString());
 			System.out.print(test.toString());
 		}

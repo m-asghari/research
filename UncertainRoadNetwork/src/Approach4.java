@@ -33,7 +33,8 @@ public class Approach4 {
 				}
 				newPMF.prob.put(b, sum);
 			}
-			retPMF = newPMF;			
+			retPMF = newPMF;
+			System.out.println(String.format("Min: %d,  Max: %d", retPMF.min, retPMF.max));
 		}
 		return retPMF;
 	}

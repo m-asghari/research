@@ -46,7 +46,7 @@ public class PMF {
 		HashMap<Integer, Integer> counts = new HashMap<Integer, Integer>();
 		int totalCount = 0;
 		for (double input : inputs) {
-			int newValue = (int) input;
+			int newValue = Util.RoundDouble(input);
 			this.min = (this.min > newValue) ? newValue : this.min;
 			this.max = (this.max < newValue) ? newValue : this.max;
 			Integer prev = (counts.get(newValue) == null) ? 0 : counts.get(newValue);

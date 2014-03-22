@@ -93,8 +93,8 @@ public class Util {
 			Calendar time, ArrayList<Integer> days) throws SQLException, ParseException{
 		OracleConnection conn = getConnection();
 		Statement stm = conn.createStatement();
-		String startTime = timeOfDayDF.format(RoundTimeDown((Calendar)time.clone()));
-		String endTime = timeOfDayDF.format(RoundTimeUp((Calendar)time.clone()));
+		String startTime = timeOfDayDF.format(RoundTimeDown((Calendar)time.clone()).getTime());
+		String endTime = timeOfDayDF.format(RoundTimeUp((Calendar)time.clone()).getTime());
 		String query = congQueryTemplate
 				.replace("##PATH_NUM##", pathNumber)
 				.replace("##FROM1##", from1)
@@ -106,14 +106,15 @@ public class Util {
 		int daysIdx = 0;
 		while (ors.next()) {
 			Calendar dayCal = Calendar.getInstance();
-			dayCal.setTime(oracleDF.parse(ors.getString(1)));
+			dayCal.setTime(ors.getTimestamp(1));
 			Integer day = dayCal.get(Calendar.DAY_OF_YEAR);
 			while (days.get(daysIdx) < day)
 				if (daysIdx < days.size() - 1)
 					daysIdx++;
 			if (days.get(daysIdx) == day) {
-				boolean status1 = ors.getBoolean(2);
-				boolean status2 = ors.getBoolean(3);
+				//System.out.print(String.format("s1: %s,  s2: %s\n", ors.getString(2), ors.getString(3)));
+				boolean status1 = (ors.getString(2).equals("TRUE")) ? true : false;
+				boolean status2 = (ors.getString(3).equals("TRUE")) ? true : false;
 				if (!status1 && !status2) f2f++;
 				if (!status1 && status2) f2t++;
 				if (status1 && !status2) t2f++;
@@ -125,10 +126,12 @@ public class Util {
 		stm.close();
 		conn.close();
 		HashMap<Pair<Integer, Integer>, Double> retValue = new HashMap<Pair<Integer,Integer>, Double>();
-		retValue.put(new Pair<Integer, Integer>(0, 0),  f2f/(f2f+f2t));
-		retValue.put(new Pair<Integer, Integer>(0, 1), f2t/(f2f+f2t));
-		retValue.put(new Pair<Integer, Integer>(1, 0), t2f/(t2f+t2t));
-		retValue.put(new Pair<Integer, Integer>(1, 1), t2t/(t2f+t2t));
+		Double falseTotal = (f2f+f2t == 0.0) ? 1.0 : f2f+f2t;
+		Double trueTotal = (t2f+t2t == 0.0) ? 1.0 : t2f+t2t;
+		retValue.put(new Pair<Integer, Integer>(0, 0),  f2f/falseTotal);
+		retValue.put(new Pair<Integer, Integer>(0, 1), f2t/falseTotal);
+		retValue.put(new Pair<Integer, Integer>(1, 0), t2f/trueTotal);
+		retValue.put(new Pair<Integer, Integer>(1, 1), t2t/trueTotal);
 		return retValue;
 	}
 	
@@ -136,8 +139,8 @@ public class Util {
 			ArrayList<Integer> days, boolean cong) throws SQLException, ParseException {
 		OracleConnection conn = getConnection();
 		Statement stm = conn.createStatement();
-		String startTime = timeOfDayDF.format(RoundTimeDown((Calendar)time.clone()));
-		String endTime = timeOfDayDF.format(RoundTimeUp((Calendar)time.clone()));
+		String startTime = timeOfDayDF.format(RoundTimeDown((Calendar)time.clone()).getTime());
+		String endTime = timeOfDayDF.format(RoundTimeUp((Calendar)time.clone()).getTime());
 		//SELECT TIME, TRAVEL_TIME FROM PATH#_EDGE_PATTERNS WHERE FROM, TO, START <= TOD AND END >= TOD
 		String query = ttCongQueryTemplate
 				.replace("##PATH_NUM##", pathNumber)
@@ -150,7 +153,7 @@ public class Util {
 		int daysIdx = 0;
 		while (ors.next()) {
 			Calendar dayCal = Calendar.getInstance();
-			dayCal.setTime(oracleDF.parse(ors.getString(1)));
+			dayCal.setTime(ors.getTimestamp(1));
 			Integer day = dayCal.get(Calendar.DAY_OF_YEAR);
 			while (days.get(daysIdx) < day) 
 				if (daysIdx < days.size() - 1) 
@@ -239,5 +242,11 @@ public class Util {
 		
 		Double retVal = sum / (stdX * stdY * (size - 1));
 		return retVal;
+	}
+
+	public static int RoundDouble(double input) {
+		int retValue = (int) input;
+		if (input % 1 > 0.5) retValue++;
+		return retValue;
 	}
 }
