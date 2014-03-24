@@ -1,5 +1,5 @@
+package edu.imsc.UncertainRoadNetworks;
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileReader;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -15,6 +15,7 @@ import oracle.jdbc.OracleDriver;
 import oracle.jdbc.driver.OracleConnection;
 import oracle.jdbc.driver.OracleResultSet;
 
+
 public class Util {
 	
 	private static final String host = "gd.usc.edu";
@@ -24,12 +25,15 @@ public class Util {
 	private static final String password = "phe334";
 	
 	public static enum PredictionMethod {Historic, Filtered, Interpolated};
+	public static PredictionMethod predictionMethod = PredictionMethod.Historic;
+	public static final Double alpha = 0.5;
 	
 	public static DateFormat oracleDF = new SimpleDateFormat("dd-MMM-yy hh.mm.ss.SSS a");
 	public static DateFormat timeOfDayDF = new SimpleDateFormat("HH:mm:ss");
 	
 	private static String ttQueryTemplate = readQuery("QueryTemplates/ttQuery.sql");
 	private static String ttCongQueryTemplate = readQuery("QueryTemplates/ttCongQuery.sql");
+	private static String singleTTQueryTemplate = readQuery("QueryTemplates/singleTTQuery.sql");
 	private static String congQueryTemplate = readQuery("QueryTemplates/congQuery.sql");
 	
 	public static OracleConnection getConnection()
@@ -49,23 +53,7 @@ public class Util {
 		}		
 		return conn;
 	}
-	
-	public static Calendar RoundTimeDown(Calendar input) {
-		int minutes = input.get(Calendar.MINUTE);
-		int offset = minutes % 5;
-		input.add(Calendar.MINUTE, -offset);
-		input.set(Calendar.SECOND, 0);
-		return input;
-	}
-	
-	public static Calendar RoundTimeUp(Calendar input) {
-		int minutes = input.get(Calendar.MINUTE);
-		int offset = minutes % 5;
-		input.add(Calendar.MINUTE, 5 - offset);
-		input.set(Calendar.SECOND, 0);
-		return input;
-	}
-	
+
 	public static String readQuery(String fileName)
 	{
 		String query = new String();
@@ -93,6 +81,23 @@ public class Util {
 		}
 		return query;
 	}
+	
+	public static Calendar RoundTimeDown(Calendar input) {
+		int minutes = input.get(Calendar.MINUTE);
+		int offset = minutes % 5;
+		input.add(Calendar.MINUTE, -offset);
+		input.set(Calendar.SECOND, 0);
+		return input;
+	}
+	
+	public static Calendar RoundTimeUp(Calendar input) {
+		int minutes = input.get(Calendar.MINUTE);
+		int offset = minutes % 5;
+		input.add(Calendar.MINUTE, 5 - offset);
+		input.set(Calendar.SECOND, 0);
+		return input;
+	}
+
 	
 	public static HashMap<Pair<Integer, Integer>, Double>  getCongestionChange(String pathNumber, String from1, String from2, 
 			Calendar time, ArrayList<Integer> days) throws SQLException, ParseException{
@@ -161,7 +166,7 @@ public class Util {
 		return travelTimes;
 	}
 	
-	public static ArrayList<Double> getTravelTimes(String pathNumber, String from, Calendar time,
+	private static ArrayList<Double> getTravelTimes(String pathNumber, String from, Calendar time,
 			ArrayList<Integer> days) throws SQLException, ParseException {
 		OracleConnection conn = getConnection();
 		Statement stm = conn.createStatement();
@@ -178,7 +183,6 @@ public class Util {
 		int daysIdx = 0;
 		while (ors.next()) {
 			Calendar dayCal = Calendar.getInstance();
-			//String temp = ors.getString(1);
 			dayCal.setTime(ors.getTimestamp(1));
 			Integer day = dayCal.get(Calendar.DAY_OF_YEAR);
 			while (days.get(daysIdx) < day) 
@@ -242,5 +246,67 @@ public class Util {
 		int retValue = (int) input;
 		if (input % 1 > 0.5) retValue++;
 		return retValue;
+	}
+
+
+	public static Double GetActualTravelTime(String pathNumber, String from,
+			Calendar startTime) throws SQLException{
+		Double retValue = 0.0;
+		OracleConnection conn = getConnection();
+		
+		String startTimeStr = oracleDF.format(RoundTimeDown((Calendar)startTime.clone()).getTime()); 
+		Statement stm = conn.createStatement();
+		String qeury = singleTTQueryTemplate
+				.replace("##PATH_NUM##", pathNumber)
+				.replace("##FROM##", from)
+				.replace("##START_TIME##", startTimeStr);
+		OracleResultSet ors = (OracleResultSet) stm.executeQuery(qeury);
+		if (ors.next()) retValue = ors.getDouble(1);
+		ors.close();
+		stm.close();
+		conn.close();
+		return retValue;
+	}
+	
+	public static ArrayList<Integer> FilterDays(String pathNumber, ArrayList<Integer> days, String from, 
+			Calendar startTimeStamp) throws SQLException, ParseException{
+		OracleConnection conn = getConnection();
+		String startTime = oracleDF.format(RoundTimeDown((Calendar)startTimeStamp.clone()).getTime()); 
+		Statement stm = conn.createStatement();
+		String query = singleTTQueryTemplate
+				.replace("##PATH_NUM##", pathNumber)
+				.replace("##FROM##", from)
+				.replace("##START_TIME##", startTime);
+		OracleResultSet ors = (OracleResultSet) stm.executeQuery(query);
+		Double startTravelTime = 1.0;
+		if (ors.next()) startTravelTime = ors.getDouble(1);
+		ors.close();
+		
+		startTime = timeOfDayDF.format(RoundTimeDown((Calendar)startTimeStamp.clone()).getTime());
+		String endTime = timeOfDayDF.format(RoundTimeUp((Calendar)startTimeStamp.clone()).getTime());
+		query = ttQueryTemplate
+				.replace("##PATH_NUM##", pathNumber)
+				.replace("##FROM##", from)
+				.replace("##START_TIME##", startTime)
+				.replace("##END_TIME##", endTime);
+		ors = (OracleResultSet) stm.executeQuery(query);
+		ArrayList<Integer> filteredDays = new ArrayList<Integer>();
+		int daysIdx = 0;
+		while (ors.next()) {
+			Calendar dayCal = Calendar.getInstance();
+			dayCal.setTime(ors.getTimestamp(1));
+			Integer day = dayCal.get(Calendar.DAY_OF_YEAR);
+			Double travelTime = ors.getDouble(2);
+			while (days.get(daysIdx) < day) 
+				if (daysIdx < days.size() - 1) 
+					daysIdx++;
+			if (days.get(daysIdx) == day)
+				if (Math.abs(travelTime - startTravelTime) <= 0.3)
+					filteredDays.add(day);
+		}
+		ors.close();
+		stm.close();
+		conn.close();
+		return filteredDays;
 	}
 }
