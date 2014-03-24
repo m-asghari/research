@@ -9,10 +9,12 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 
+import edu.imsc.UncertainRoadNetworks.Util.PredictionMethod;
+
 public class Approach5 {
 	
-	public static NormalDist GenerateModel(String pathNumber, String[] sensorList,
-			String timeOfDay, ArrayList<Integer> days) throws SQLException, ParseException {
+	public static NormalDist GenerateModel(String pathNumber, String[] sensorList, String timeOfDay, 
+			ArrayList<Integer> days, Calendar startTime) throws SQLException, ParseException {
 		Calendar tod = Calendar.getInstance();
 		tod.setTime(Util.timeOfDayDF.parse(timeOfDay));
 		
@@ -20,6 +22,11 @@ public class Approach5 {
 		
 		for (int s = 0; s < sensorList.length - 1; ++s) {
 			String from = sensorList[s];
+			ArrayList<Double> travelTimes = Util.getTravelTimes(pathNumber, from, tod, days);
+			if (Util.predictionMethod == PredictionMethod.Interpolated) {
+				Double actualTime = Util.GetActualTravelTime(pathNumber, from, (Calendar)startTime.clone());
+				travelTimes = Util.Interpolate(travelTimes, actualTime, Util.alpha);
+			}
 			allTravelTimes.put(from, Util.getTravelTimes(pathNumber, from, tod, days));
 		}
 		

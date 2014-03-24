@@ -8,12 +8,14 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 
+import edu.imsc.UncertainRoadNetworks.Util.PredictionMethod;
+
 // 0 & False -> Normal
 // 1 & True -> Congested
 public class Approach7 {
 	
-	public static Pair<PMF, PMF> GenerateModel(String pathNumber, String[] sensorList, 
-			String timeOfDay, ArrayList<Integer> days) throws SQLException, ParseException{		
+	public static Pair<PMF, PMF> GenerateModel(String pathNumber, String[] sensorList, String timeOfDay, 
+			ArrayList<Integer> days, Calendar startTime) throws SQLException, ParseException{		
 		Calendar tod = Calendar.getInstance();
 		tod.setTime(Util.timeOfDayDF.parse(timeOfDay));
 		
@@ -36,6 +38,16 @@ public class Approach7 {
 				Calendar time = Calendar.getInstance();
 				time.setTime(Util.timeOfDayDF.parse(timeOfDay));
 				time.add(Calendar.MINUTE, i);
+				Calendar currStartTime = Calendar.getInstance();
+				currStartTime.setTime(startTime.getTime());
+				currStartTime.add(Calendar.MINUTE, i);
+				PMF edgeNormPMF = Util.getPMF(pathNumber, from, time, days, false);
+				PMF edgeCongPMF = Util.getPMF(pathNumber, from, time, days, true);
+				if (Util.predictionMethod == PredictionMethod.Interpolated) {
+					Double actualTime = Util.GetActualTravelTime(pathNumber, from, currStartTime);
+					edgeNormPMF = edgeNormPMF.Interpolate(actualTime, Util.alpha);
+					edgeCongPMF = edgeCongPMF.Interpolate(actualTime, Util.alpha);
+				}
 				edgeNormPMFs.put(i, Util.getPMF(pathNumber, from, time, days, false));
 				edgeCongPMFs.put(i, Util.getPMF(pathNumber, from, time, days, true));
 				transitionProbs.put(i, Util.getCongestionChange(pathNumber, prev, from, time, days));

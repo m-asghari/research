@@ -1,5 +1,6 @@
 package edu.imsc.UncertainRoadNetworks;
 import java.util.ArrayList;
+import org.apache.commons.math3.distribution.NormalDistribution;
 
 
 public class NormalDist {
@@ -46,12 +47,14 @@ public class NormalDist {
 	}
 
 	public NormalDist Interpolate(Double actualTravelTime, Double alpha) {
-		return new NormalDist((1-Util.alpha)*this.mean + Util.alpha*actualTravelTime, (1-Util.alpha)*this.var);
+		return new NormalDist((1-Util.alpha)*this.mean + Util.alpha*actualTravelTime, Math.pow((1-Util.alpha), 2)*this.var);
 	}
 	
 	public Double GetScore(Double actualTime) {
-		// TODO Auto-generated method stub
-		return null;
+		Double std = Math.sqrt(this.var);
+		Double v = (actualTime - this.mean)/std;
+		NormalDistribution normDist = new NormalDistribution(0, 1);
+		return -std * (1.0/Math.sqrt(Math.PI) - 2*normDist.density(v) - v*(2*normDist.cumulativeProbability(v) - 1));
 	}
 
 }
