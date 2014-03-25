@@ -29,6 +29,7 @@ public class Approach7 {
 		for (int s = 1; s < sensorList.length - 1; ++s) {
 			String prev = sensorList[s-1];
 			String from = sensorList[s];
+			Double currTravelTime = Util.GetActualTravelTime(pathNumber, from, (Calendar)startTime.clone());
 			int prevMin = Math.min(congPMF.min, normPMF.min);
 			int prevMax = Math.max(congPMF.max, normPMF.max);
 			HashMap<Integer, PMF> edgeNormPMFs = new HashMap<Integer, PMF>();
@@ -38,15 +39,11 @@ public class Approach7 {
 				Calendar time = Calendar.getInstance();
 				time.setTime(Util.timeOfDayDF.parse(timeOfDay));
 				time.add(Calendar.MINUTE, i);
-				Calendar currStartTime = Calendar.getInstance();
-				currStartTime.setTime(startTime.getTime());
-				currStartTime.add(Calendar.MINUTE, i);
 				PMF edgeNormPMF = Util.getPMF(pathNumber, from, time, days, false);
 				PMF edgeCongPMF = Util.getPMF(pathNumber, from, time, days, true);
 				if (Util.predictionMethod == PredictionMethod.Interpolated) {
-					Double actualTime = Util.GetActualTravelTime(pathNumber, from, currStartTime);
-					edgeNormPMF = edgeNormPMF.Interpolate(actualTime, Util.alpha);
-					edgeCongPMF = edgeCongPMF.Interpolate(actualTime, Util.alpha);
+					edgeNormPMF = edgeNormPMF.Interpolate(currTravelTime, (Util.timeHorizon - prevMin - i)/Util.timeHorizon);
+					edgeCongPMF = edgeCongPMF.Interpolate(currTravelTime, (Util.timeHorizon - prevMin - i)/Util.timeHorizon);
 				}
 				edgeNormPMFs.put(i, Util.getPMF(pathNumber, from, time, days, false));
 				edgeCongPMFs.put(i, Util.getPMF(pathNumber, from, time, days, true));

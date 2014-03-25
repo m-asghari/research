@@ -19,6 +19,7 @@ public class Approach4 {
 		PMF retPMF = new PMF();
 		for (int s = 0; s < sensorList.length - 1; ++s) {
 			String from = sensorList[s];
+			Double currTravelTime = Util.GetActualTravelTime(pathNumber, from, (Calendar)startTime.clone());
 			int min = retPMF.min;
 			int max = retPMF.max;
 			HashMap<Integer, PMF> edgePMFs = new HashMap<Integer, PMF>();
@@ -26,13 +27,9 @@ public class Approach4 {
 				Calendar time = Calendar.getInstance();
 				time.setTime(Util.timeOfDayDF.parse(timeOfDay));
 				time.add(Calendar.MINUTE, i);
-				Calendar currStartTime = Calendar.getInstance();
-				currStartTime.setTime(startTime.getTime());
-				currStartTime.add(Calendar.MINUTE, i);
 				PMF edgePMF = Util.getPMF(pathNumber, from, time, days);
 				if (Util.predictionMethod == PredictionMethod.Interpolated) {
-					Double actualTime = Util.GetActualTravelTime(pathNumber, from, currStartTime);
-					edgePMF = edgePMF.Interpolate(actualTime, Util.alpha);
+					edgePMF = edgePMF.Interpolate(currTravelTime, (Util.timeHorizon - min - i)/Util.timeHorizon);
 				}
 				edgePMFs.put(i, edgePMF);
 			}
@@ -45,7 +42,7 @@ public class Approach4 {
 				newPMF.prob.put(b, sum);
 			}
 			retPMF = newPMF;
-			System.out.println(String.format("Min: %d,  Max: %d", retPMF.min, retPMF.max));
+			//System.out.println(String.format("Min: %d,  Max: %d", retPMF.min, retPMF.max));
 		}
 		return retPMF;
 	}

@@ -44,9 +44,9 @@ public class Approach6 {
 			PMF edgeNormPMF = Util.getPMF(pathNumber, from, tod, days, false);
 			// TODO interpolate both edges if necessary ...
 			if (Util.predictionMethod == PredictionMethod.Interpolated) {
-				Double actualTime = Util.GetActualTravelTime(pathNumber, from, (Calendar)startTime.clone());
-				edgeCongPMF = edgeCongPMF.Interpolate(actualTime, Util.alpha);
-				edgeNormPMF = edgeNormPMF.Interpolate(actualTime, Util.alpha);
+				Double currTravelTime = Util.GetActualTravelTime(pathNumber, from, (Calendar)startTime.clone());
+				edgeCongPMF = edgeCongPMF.Interpolate(currTravelTime, Util.alpha);
+				edgeNormPMF = edgeNormPMF.Interpolate(currTravelTime, Util.alpha);
 			}
 			//bw.write(String.format("%s\n", sensorList[s]));
 			//bw.write(String.format("Transitions: %s\n", transitionProb.toString()));

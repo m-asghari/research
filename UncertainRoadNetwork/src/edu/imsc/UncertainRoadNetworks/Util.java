@@ -27,6 +27,7 @@ public class Util {
 	public static enum PredictionMethod {Historic, Filtered, Interpolated};
 	public static PredictionMethod predictionMethod = PredictionMethod.Historic;
 	public static final Double alpha = 0.5;
+	public static final Double timeHorizon = 60.0;
 	
 	public static DateFormat oracleDF = new SimpleDateFormat("dd-MMM-yy hh.mm.ss.SSS a");
 	public static DateFormat timeOfDayDF = new SimpleDateFormat("HH:mm:ss");
