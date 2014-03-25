@@ -108,4 +108,21 @@ public class PMF {
 		}
 		return retPMF;
 	}
+	
+	public Double GetScore(Double actualTime) {
+		Double cdf = 0.0;
+		Double score = 0.0;
+		for (int i = min; i < Util.RoundDouble(actualTime); ++i) {
+			cdf += prob.get(i);
+			score += Math.pow(cdf, 2);
+		}
+		cdf += prob.get(Util.RoundDouble(actualTime));
+		score += (actualTime - (Util.RoundDouble(actualTime) - 0.5)) * Math.pow(cdf, 2);
+		score += ((Util.RoundDouble(actualTime) + 0.5) - actualTime) * Math.pow(1-cdf, 2);
+		for (int i = Util.RoundDouble(actualTime) + 1; i <= this.max; ++i ) {
+			cdf += prob.get(i);
+			score += Math.pow(1-cdf, 2);
+		}
+		return score;
+	}
 }

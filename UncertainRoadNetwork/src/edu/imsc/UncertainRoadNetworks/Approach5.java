@@ -9,8 +9,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 
-import edu.imsc.UncertainRoadNetworks.Util.PredictionMethod;
-
 public class Approach5 {
 	
 	public static NormalDist GenerateModel(String pathNumber, String[] sensorList, String timeOfDay, 
@@ -19,10 +17,10 @@ public class Approach5 {
 		tod.setTime(Util.timeOfDayDF.parse(timeOfDay));
 		
 		HashMap<String, ArrayList<Double>> allTravelTimes = new HashMap<String, ArrayList<Double>>();
-		
+		 
 		for (int s = 0; s < sensorList.length - 1; ++s) {
 			String from = sensorList[s];
-			ArrayList<Double> travelTimes = Util.getTravelTimes(pathNumber, from, tod, days);
+			//ArrayList<Double> travelTimes = Util.getTravelTimes(pathNumber, from, tod, days);
 			allTravelTimes.put(from, Util.getTravelTimes(pathNumber, from, tod, days));
 		}
 		
@@ -35,9 +33,9 @@ public class Approach5 {
 			retDist.var += edgeDist.var;
 			Double sum = 0.0;
 			for (int i = 0; i < s; ++i)
-				sum += Util.PearsonCorrCoef(allTravelTimes.get(sensorList[i]), travelTimes);
+				sum += Util.pearsonCorrCoef.get(new Pair<String, String>(sensorList[s], sensorList[i]));
 			for (int i = s+1; i < sensorList.length - 1; ++i)
-				sum += Util.PearsonCorrCoef(allTravelTimes.get(sensorList[i]), travelTimes);
+				sum += Util.pearsonCorrCoef.get(new Pair<String, String>(sensorList[s], sensorList[i]));
 			retDist.var += sum;
 		}
 		return retDist;

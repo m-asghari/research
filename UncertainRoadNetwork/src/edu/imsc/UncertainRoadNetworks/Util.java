@@ -24,10 +24,19 @@ public class Util {
 	private static final String username = "sch_sensor";
 	private static final String password = "phe334";
 	
+	public static final String pathNumber = "1";
+	
 	public static enum PredictionMethod {Historic, Filtered, Interpolated};
 	public static PredictionMethod predictionMethod = PredictionMethod.Historic;
 	public static final Double alpha = 0.5;
 	public static final Double timeHorizon = 60.0;
+	
+	public static HashMap<Pair<String, String>, Double> pearsonCorrCoef = PearsonCorrCoef(pathNumber);
+	public static HashMap<Pair<String, String>, ArrayList<Double>> congChangeProb = CongChageProbs();
+	public static final int f2f = 0;
+	public static final int f2t = 1;
+	public static final int t2f = 2;
+	public static final int t2t = 3;
 	
 	public static DateFormat oracleDF = new SimpleDateFormat("dd-MMM-yy hh.mm.ss.SSS a");
 	public static DateFormat timeOfDayDF = new SimpleDateFormat("HH:mm:ss");
@@ -36,6 +45,7 @@ public class Util {
 	private static String ttCongQueryTemplate = readQuery("QueryTemplates/ttCongQuery.sql");
 	private static String singleTTQueryTemplate = readQuery("QueryTemplates/singleTTQuery.sql");
 	private static String congQueryTemplate = readQuery("QueryTemplates/congQuery.sql");
+	private static String pearsonQueryTemplate = readQuery("QueryTemplates/PearsonQuery.sql");
 	
 	public static OracleConnection getConnection()
 	{
@@ -314,5 +324,58 @@ public class Util {
 		input.add(Calendar.MINUTE, 5 - offset);
 		input.set(Calendar.SECOND, 0);
 		return input;
+	}
+
+	public static HashMap<Pair<String, String>, Double> PearsonCorrCoef(
+			String pathNumber) {
+		HashMap<Pair<String, String>, Double> retMap = new HashMap<Pair<String,String>, Double>();
+		OracleConnection conn = getConnection();
+		try {
+			Statement stm = conn.createStatement();
+			String query = pearsonQueryTemplate
+					.replace("##PATH_NUM##", pathNumber);
+			OracleResultSet ors = (OracleResultSet) stm.executeQuery(query);
+			while (ors.next()) {
+				String link1 = ors.getString(1);
+				String link2 = ors.getString(2);
+				retMap.put(new Pair<String, String>(link1, link2), ors.getDouble(3));
+				}
+			ors.close();
+			stm.close();
+			conn.close();
+		}
+		catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return retMap;
+	}
+	
+
+	private static HashMap<Pair<String, String>, ArrayList<Double>> CongChageProbs() {
+		HashMap<Pair<String, String>, ArrayList<Double>> retMap = new HashMap<Pair<String,String>, ArrayList<Double>>();
+		OracleConnection conn = getConnection();
+		try {
+			Statement stm = conn.createStatement();
+			String query = congQueryTemplate
+					.replace("##PATH_NUM##", pathNumber);
+			OracleResultSet ors = (OracleResultSet) stm.executeQuery(query);
+			while (ors.next()) {
+				String link1 = ors.getString(1);
+				String link2 = ors.getString(2);
+				ArrayList<Double> probs = new ArrayList<Double>();
+				probs.add(ors.getDouble(3));
+				probs.add(ors.getDouble(4));
+				probs.add(ors.getDouble(5));
+				probs.add(ors.getDouble(6));
+				retMap.put(new Pair<String, String>(link1, link2), probs);
+				}
+			ors.close();
+			stm.close();
+			conn.close();
+		}
+		catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return retMap;
 	}
 }
