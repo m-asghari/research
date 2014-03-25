@@ -3,7 +3,6 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.sql.Statement;
 
-import oracle.jdbc.driver.OracleConnection;
 import oracle.jdbc.driver.OracleResultSet;
 
 
@@ -37,13 +36,12 @@ public class GenerateKMLFile {
 			"\t\t</Placemark>\n";
 
 	public static void main(String[] args) {
-		OracleConnection conn = Util.getConnection();
 		String query = "SELECT DISTINCT SC.LINK_ID, t.Y, t.X, SC.DIRECTION " + 
 				"FROM SENSOR_CONFIG SC, table(SDO_UTIL.GETVERTICES(SC.START_LAT_LONG)) t " +
 				"ORDER BY SC.LINK_ID";
 		OracleResultSet ors = null;
 		try {
-			Statement stm = conn.createStatement();
+			Statement stm = Util.conn.createStatement();
 			ors = (OracleResultSet) stm.executeQuery(query);
 			StringBuilder sb = new StringBuilder();
 			while (ors.next()) {

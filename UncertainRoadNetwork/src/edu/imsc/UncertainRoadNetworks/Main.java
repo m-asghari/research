@@ -8,10 +8,7 @@ public class Main {
 	private static int k = 5; 
 	
 	public static void main(String[] args) {
-		String path = "768701-774344-770599-768297-768283-770587-770012-770024-770036-770354-770048-770331-770544-770061-770556-770076-771202-770089-770103-771636-770475-770487-770116-769895-769880-769866-769847-768230-767610-767598-718076-767471-718072-767454-762329-767621-767573-718066-767542-718064-767495-718375-716955-718370-716949-760650-718045-718173-760643-760635-774671-718166-764037";
-		String[] sensorList = path.split("-");
-		int pathNum = 2;
-		String pathNumber = Integer.toString(pathNum);
+		String[] sensorList = Util.path.split("-");
 		try {
 			Calendar initialStartTime = Calendar.getInstance();
 			initialStartTime.setTime(Util.oracleDF.parse("01-JAN-13 00.00.00.0 AM"));
@@ -38,23 +35,23 @@ public class Main {
 				Double actualTime;
 				switch (Util.predictionMethod) {
 				case Historic:
-					modelDist = Approach1.GenerateModel(pathNumber, sensorList, timeOfDay, modelDays, null);
+					modelDist = Approach1.GenerateModel(sensorList, timeOfDay, modelDays, null);
 					for (Calendar startTime : testDays) {
-						actualTime = Approach1.GenerateActual(pathNumber, sensorList, (Calendar)startTime.clone());
+						actualTime = Approach1.GenerateActual(sensorList, (Calendar)startTime.clone());
 						score += modelDist.GetScore(actualTime);
 					}
 					break;
 				case Filtered:
 					for (Calendar startTime : testDays) {
-						ArrayList<Integer> filteredDays = Util.FilterDays(pathNumber, modelDays, sensorList[0], (Calendar)startTime.clone());
-						modelDist = Approach1.GenerateModel(pathNumber, sensorList, timeOfDay, filteredDays, null);
-						actualTime = Approach1.GenerateActual(pathNumber, sensorList, (Calendar)startTime.clone());
+						ArrayList<Integer> filteredDays = Util.FilterDays(modelDays, sensorList[0], (Calendar)startTime.clone());
+						modelDist = Approach1.GenerateModel(sensorList, timeOfDay, filteredDays, null);
+						actualTime = Approach1.GenerateActual(sensorList, (Calendar)startTime.clone());
 						score += modelDist.GetScore(actualTime);
 					}
 				case Interpolated:
 					for (Calendar startTime : testDays) {
-						modelDist = Approach1.GenerateModel(pathNumber, sensorList, timeOfDay, modelDays, (Calendar)startTime.clone());
-						actualTime = Approach1.GenerateActual(pathNumber, sensorList, (Calendar)startTime.clone());
+						modelDist = Approach1.GenerateModel(sensorList, timeOfDay, modelDays, (Calendar)startTime.clone());
+						actualTime = Approach1.GenerateActual(sensorList, (Calendar)startTime.clone());
 						score += modelDist.GetScore(actualTime);
 					}
 				default:

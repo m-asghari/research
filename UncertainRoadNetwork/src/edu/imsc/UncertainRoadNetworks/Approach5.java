@@ -11,7 +11,7 @@ import java.util.HashMap;
 
 public class Approach5 {
 	
-	public static NormalDist GenerateModel(String pathNumber, String[] sensorList, String timeOfDay, 
+	public static NormalDist GenerateModel(String[] sensorList, String timeOfDay, 
 			ArrayList<Integer> days, Calendar startTime) throws SQLException, ParseException {
 		Calendar tod = Calendar.getInstance();
 		tod.setTime(Util.timeOfDayDF.parse(timeOfDay));
@@ -21,7 +21,7 @@ public class Approach5 {
 		for (int s = 0; s < sensorList.length - 1; ++s) {
 			String from = sensorList[s];
 			//ArrayList<Double> travelTimes = Util.getTravelTimes(pathNumber, from, tod, days);
-			allTravelTimes.put(from, Util.getTravelTimes(pathNumber, from, tod, days));
+			allTravelTimes.put(from, Util.getTravelTimes(from, tod, days));
 		}
 		
 		NormalDist retDist = new NormalDist(0, 0);
@@ -41,9 +41,9 @@ public class Approach5 {
 		return retDist;
 	}
 	
-	public static NormalDist GenerateActual(String pathNumber, String[] sensorList,
+	public static NormalDist GenerateActual(String[] sensorList,
 			ArrayList<Calendar> startTimes) throws SQLException, ParseException {
-		ArrayList<Calendar> endTimes = SpeedUp.TimeDependentTravelTime(pathNumber, sensorList, startTimes);
+		ArrayList<Calendar> endTimes = SpeedUp.TimeDependentTravelTime(sensorList, startTimes);
 		ArrayList<Double> travelTimes = new ArrayList<Double>();
 		for (int i = 0; i < startTimes.size(); ++i) {
 			travelTimes.add(SpeedUp.ToMinutes(startTimes.get(i), endTimes.get(i)));			

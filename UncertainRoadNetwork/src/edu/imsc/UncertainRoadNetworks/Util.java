@@ -23,7 +23,9 @@ public class Util {
 	private static final String service = "adms";
 	private static final String username = "sch_sensor";
 	private static final String password = "phe334";
+	public static final OracleConnection conn = getConnection();
 	
+	public static final String path = "768701-774344-770599-768297-768283-770587-770012-770024-770036-770354-770048-770331-770544-770061-770556-770076-771202-770089-770103-770475-770487-770116-769895-769880-769866-769847-767610-767598-718076-767471-718072-767454-762329-767621-767573-718066-767542-718064-767495-716955-716949-760650-718045-760643-760635-774671-718166";
 	public static final String pathNumber = "1";
 	
 	public static enum PredictionMethod {Historic, Filtered, Interpolated};
@@ -31,7 +33,7 @@ public class Util {
 	public static final Double alpha = 0.5;
 	public static final Double timeHorizon = 60.0;
 	
-	public static HashMap<Pair<String, String>, Double> pearsonCorrCoef = PearsonCorrCoef(pathNumber);
+	public static HashMap<Pair<String, String>, Double> pearsonCorrCoef = PearsonCorrCoef();
 	public static HashMap<Pair<String, String>, ArrayList<Double>> congChangeProb = CongChageProbs();
 	public static final int f2f = 0;
 	public static final int f2t = 1;
@@ -47,7 +49,7 @@ public class Util {
 	private static String congQueryTemplate = readQuery("QueryTemplates/congQuery.sql");
 	private static String pearsonQueryTemplate = readQuery("QueryTemplates/PearsonQuery.sql");
 	
-	public static OracleConnection getConnection()
+	private static OracleConnection getConnection()
 	{
 		OracleConnection conn = null;
 		
@@ -93,27 +95,26 @@ public class Util {
 		return query;
 	}
 	
-	public static NormalDist getNormalDist(String pathNumber, String from, Calendar time,
+	public static NormalDist getNormalDist(String from, Calendar time,
 			ArrayList<Integer> days) throws SQLException, ParseException {
-		ArrayList<Double> travelTimes = getTravelTimes(pathNumber, from, time, days);
+		ArrayList<Double> travelTimes = getTravelTimes(from, time, days);
 		return new NormalDist(travelTimes);
 	}
 	
-	public static PMF getPMF(String pathNumber, String from, Calendar time,
+	public static PMF getPMF(String from, Calendar time,
 			ArrayList<Integer> days) throws SQLException, ParseException{
-		ArrayList<Double> travelTimes = getTravelTimes(pathNumber, from, time, days);
+		ArrayList<Double> travelTimes = getTravelTimes(from, time, days);
 		return new PMF(travelTimes);
 	}
 	
-	public static PMF getPMF(String pathNumber, String from, Calendar time,
+	public static PMF getPMF(String from, Calendar time,
 			ArrayList<Integer> days, boolean cong) throws SQLException, ParseException{
-		ArrayList<Double> travelTimes = getTravelTimes(pathNumber, from, time, days, cong);
+		ArrayList<Double> travelTimes = getTravelTimes(from, time, days, cong);
 		return new PMF(travelTimes);
 	}
 	
-	public static ArrayList<Integer> FilterDays(String pathNumber, ArrayList<Integer> days, String from, 
+	public static ArrayList<Integer> FilterDays(ArrayList<Integer> days, String from, 
 			Calendar startTimeStamp) throws SQLException, ParseException{
-		OracleConnection conn = getConnection();
 		String startTime = oracleDF.format(RoundTimeDown((Calendar)startTimeStamp.clone()).getTime()); 
 		Statement stm = conn.createStatement();
 		String query = singleTTQueryTemplate
@@ -149,14 +150,13 @@ public class Util {
 		}
 		ors.close();
 		stm.close();
-		conn.close();
 		return filteredDays;
 	}
 	
-	public static Double GetActualTravelTime(String pathNumber, String from,
+	public static Double GetActualTravelTime(String from,
 			Calendar startTime) throws SQLException{
 		Double retValue = 0.0;
-		OracleConnection conn = getConnection();
+		
 		
 		String startTimeStr = oracleDF.format(RoundTimeDown((Calendar)startTime.clone()).getTime()); 
 		Statement stm = conn.createStatement();
@@ -168,13 +168,12 @@ public class Util {
 		if (ors.next()) retValue = ors.getDouble(1);
 		ors.close();
 		stm.close();
-		conn.close();
 		return retValue;
 	}
 	
-	public static ArrayList<Double> getTravelTimes(String pathNumber, String from, Calendar time,
+	public static ArrayList<Double> getTravelTimes(String from, Calendar time,
 			ArrayList<Integer> days) throws SQLException, ParseException {
-		OracleConnection conn = getConnection();
+		
 		Statement stm = conn.createStatement();
 		String startTime = timeOfDayDF.format(RoundTimeDown((Calendar)time.clone()).getTime());
 		String endTime = timeOfDayDF.format(RoundTimeUp((Calendar)time.clone()).getTime());
@@ -199,13 +198,12 @@ public class Util {
 		}
 		ors.close();
 		stm.close();
-		conn.close();
 		return travelTimes;
 	}
 	
-	private static ArrayList<Double> getTravelTimes(String pathNumber, String from, Calendar time, 
+	private static ArrayList<Double> getTravelTimes(String from, Calendar time, 
 			ArrayList<Integer> days, boolean cong) throws SQLException, ParseException {
-		OracleConnection conn = getConnection();
+		
 		Statement stm = conn.createStatement();
 		String startTime = timeOfDayDF.format(RoundTimeDown((Calendar)time.clone()).getTime());
 		String endTime = timeOfDayDF.format(RoundTimeUp((Calendar)time.clone()).getTime());
@@ -231,7 +229,6 @@ public class Util {
 		}
 		ors.close();
 		stm.close();
-		conn.close();
 		return travelTimes;
 	}
 	
@@ -269,9 +266,9 @@ public class Util {
 		return retVal;
 	}
 	
-	public static HashMap<Pair<Integer, Integer>, Double>  getCongestionChange(String pathNumber, String from1, String from2, 
+	public static HashMap<Pair<Integer, Integer>, Double>  getCongestionChange(String from1, String from2, 
 			Calendar time, ArrayList<Integer> days) throws SQLException, ParseException{
-		OracleConnection conn = getConnection();
+		
 		Statement stm = conn.createStatement();
 		//String startTime = timeOfDayDF.format(RoundTimeDown((Calendar)time.clone()).getTime());
 		//String endTime = timeOfDayDF.format(RoundTimeUp((Calendar)time.clone()).getTime());
@@ -293,7 +290,6 @@ public class Util {
 		}
 		ors.close();
 		stm.close();
-		conn.close();
 		HashMap<Pair<Integer, Integer>, Double> retValue = new HashMap<Pair<Integer,Integer>, Double>();
 		Double falseTotal = (f2f+f2t == 0.0) ? 1.0 : f2f+f2t;
 		Double trueTotal = (t2f+t2t == 0.0) ? 1.0 : t2f+t2t;
@@ -326,10 +322,9 @@ public class Util {
 		return input;
 	}
 
-	public static HashMap<Pair<String, String>, Double> PearsonCorrCoef(
-			String pathNumber) {
+	public static HashMap<Pair<String, String>, Double> PearsonCorrCoef() {
 		HashMap<Pair<String, String>, Double> retMap = new HashMap<Pair<String,String>, Double>();
-		OracleConnection conn = getConnection();
+		
 		try {
 			Statement stm = conn.createStatement();
 			String query = pearsonQueryTemplate
@@ -342,7 +337,6 @@ public class Util {
 				}
 			ors.close();
 			stm.close();
-			conn.close();
 		}
 		catch (SQLException e) {
 			e.printStackTrace();
@@ -353,7 +347,7 @@ public class Util {
 
 	private static HashMap<Pair<String, String>, ArrayList<Double>> CongChageProbs() {
 		HashMap<Pair<String, String>, ArrayList<Double>> retMap = new HashMap<Pair<String,String>, ArrayList<Double>>();
-		OracleConnection conn = getConnection();
+		
 		try {
 			Statement stm = conn.createStatement();
 			String query = congQueryTemplate
@@ -371,7 +365,6 @@ public class Util {
 				}
 			ors.close();
 			stm.close();
-			conn.close();
 		}
 		catch (SQLException e) {
 			e.printStackTrace();

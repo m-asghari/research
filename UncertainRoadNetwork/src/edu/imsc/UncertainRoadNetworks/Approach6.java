@@ -17,7 +17,7 @@ import edu.imsc.UncertainRoadNetworks.Util.PredictionMethod;
 // 1 & True -> Congested
 public class Approach6 {
 	
-	public static Pair<PMF, PMF> GenerateModel(String pathNumber, String[] sensorList, 
+	public static Pair<PMF, PMF> GenerateModel(String[] sensorList, 
 			String timeOfDay, ArrayList<Integer> days,
 			Calendar startTime) throws SQLException, ParseException, IOException{		
 		Calendar tod = Calendar.getInstance();
@@ -32,19 +32,19 @@ public class Approach6 {
 		Pair<Integer, Integer> t2t = new Pair<Integer, Integer>(1, 1);		
 		
 		//bw.write(String.format("%s\n", sensorList[0]));
-		PMF congPMF = Util.getPMF(pathNumber, sensorList[0], tod, days, true);
+		PMF congPMF = Util.getPMF(sensorList[0], tod, days, true);
 		//bw.write(String.format("congPMF: %s", congPMF.toString()));
-		PMF normPMF = Util.getPMF(pathNumber, sensorList[0], tod, days, false);
+		PMF normPMF = Util.getPMF(sensorList[0], tod, days, false);
 		//bw.write(String.format("normPMF: %s", normPMF.toString()));
 		for (int s = 1; s < sensorList.length - 1; ++s) {
 			String prev = sensorList[s-1];
 			String from = sensorList[s];
-			HashMap<Pair<Integer, Integer>, Double> transitionProb = Util.getCongestionChange(pathNumber, prev, from, tod, days);
-			PMF edgeCongPMF = Util.getPMF(pathNumber, from, tod, days, true);
-			PMF edgeNormPMF = Util.getPMF(pathNumber, from, tod, days, false);
+			HashMap<Pair<Integer, Integer>, Double> transitionProb = Util.getCongestionChange(prev, from, tod, days);
+			PMF edgeCongPMF = Util.getPMF(from, tod, days, true);
+			PMF edgeNormPMF = Util.getPMF(from, tod, days, false);
 			// TODO interpolate both edges if necessary ...
 			if (Util.predictionMethod == PredictionMethod.Interpolated) {
-				Double currTravelTime = Util.GetActualTravelTime(pathNumber, from, (Calendar)startTime.clone());
+				Double currTravelTime = Util.GetActualTravelTime(from, (Calendar)startTime.clone());
 				edgeCongPMF = edgeCongPMF.Interpolate(currTravelTime, Util.alpha);
 				edgeNormPMF = edgeNormPMF.Interpolate(currTravelTime, Util.alpha);
 			}
@@ -85,9 +85,9 @@ public class Approach6 {
 		return new Pair<PMF, PMF>(normPMF, congPMF);
 	}
 	
-	public static PMF GenerateActual(String pathNumber, String[] sensorList, 
+	public static PMF GenerateActual(String[] sensorList, 
 			ArrayList<Calendar> startTimes) throws SQLException, ParseException {
-		ArrayList<Double> travelTimes = SpeedUp.TimeInependentTravelTime(pathNumber, sensorList, startTimes);
+		ArrayList<Double> travelTimes = SpeedUp.TimeInependentTravelTime(sensorList, startTimes);
 		PMF retPMF = new PMF(travelTimes);
 		return retPMF;
 	}

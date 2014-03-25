@@ -5,7 +5,6 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import oracle.jdbc.driver.OracleConnection;
 import oracle.jdbc.driver.OracleResultSet;
 
 public class GenerateLinkCorrelations {
@@ -16,17 +15,14 @@ public class GenerateLinkCorrelations {
 	private static Pair<Integer, Integer> t2tPair = new Pair<Integer, Integer>(1, 1);
 
 	public static void main(String[] args) {
-		OracleConnection conn = Util.getConnection();
-		String path = "768701-774344-770599-768297-768283-770587-770012-770024-770036-770354-770048-770331-770544-770061-770556-770076-771202-770089-770103-770475-770487-770116-769895-769880-769866-769847-767610-767598-718076-767471-718072-767454-762329-767621-767573-718066-767542-718064-767495-716955-716949-760650-718045-760643-760635-774671-718166";
-		String[] edges = path.split("-");
-		String pathNumber = "2";
+		String[] edges = Util.path.split("-");
 		try {
-			CreateTable(conn, pathNumber);
+			CreateTable();
 			HashMap<String, ArrayList<Double>> allTravelTimes = new HashMap<String, ArrayList<Double>>();
 			HashMap<String, Double> means = new HashMap<String, Double>();
 			//HashMap<String, Double> stds = new HashMap<String, Double>();
 			for (String edge : edges) {
-				ArrayList<Double> travelTimes = GetEdgeTravelTimes(conn, pathNumber, edge);
+				ArrayList<Double> travelTimes = GetEdgeTravelTimes(edge);
 				Double mean = GetMean(travelTimes);
 				allTravelTimes.put(edge, travelTimes);
 				means.put(edge, mean);
@@ -38,23 +34,21 @@ public class GenerateLinkCorrelations {
 					String link2 = edges[j];
 					Double cont = GetContLinkCorr(allTravelTimes.get(link1), means.get(link1),
 							allTravelTimes.get(link2), means.get(link2));
-					InsertCont(conn, pathNumber, link1, link2, cont);
-					InsertCont(conn, pathNumber, link2, link1, cont);
+					InsertCont(link1, link2, cont);
+					InsertCont(link2, link1, cont);
 				}
 			}
 			for (int i = 1; i < edges.length - 1; ++i) {
 				String prevEdge = edges[i-1];
 				String edge = edges[i];
-				ArrayList<Pair<Integer, Integer>> congChanges = GetCongestions(conn, pathNumber, prevEdge, edge);
+				ArrayList<Pair<Integer, Integer>> congChanges = GetCongestions(prevEdge, edge);
 				HashMap<String, Double> probs = GetTransitionProbs(congChanges);				
-				UpdateCong(conn, pathNumber, prevEdge, edge, probs);
+				UpdateCong(prevEdge, edge, probs);
 			}
 		}
 		catch (Exception e) {
 			e.printStackTrace();
 		}
-		
-
 	}
 
 	private static HashMap<String, Double> GetTransitionProbs(
@@ -98,17 +92,17 @@ public class GenerateLinkCorrelations {
 		return sum/(size - 1);
 	}
 
-	public static void CreateTable(OracleConnection conn, String pathNumber) throws SQLException{
-		Statement stm = conn.createStatement();
+	public static void CreateTable() throws SQLException{
+		Statement stm = Util.conn.createStatement();
 		String query = Util.readQuery("QueryTemplates\\LinkCorrelations\\CreateTable.sql")
-				.replace("##PATH_NUM##", pathNumber);
+				.replace("##PATH_NUM##", Util.pathNumber);
 		stm.execute(query);
 		stm.close();		
 	}	
 	
 	/*private static ArrayList<String> GetAllEdges(OracleConnection conn, String pathNumber) throws SQLException {
 		ArrayList<String> retList = new ArrayList<String>();
-		Statement stm = conn.createStatement();
+		Statement stm = Util.conn.createStatement();
 		String query = Util.readQuery("QueryTemplates\\LinkCorrelations\\SelectEdges.sql")
 				.replace("##PATH_NUM##", pathNumber);
 		OracleResultSet ors = (OracleResultSet) stm.executeQuery(query);
@@ -117,12 +111,11 @@ public class GenerateLinkCorrelations {
 		return retList;
 	}*/
 	
-	private static ArrayList<Double> GetEdgeTravelTimes(OracleConnection conn, String pathNumber,
-			String from) throws SQLException {
+	private static ArrayList<Double> GetEdgeTravelTimes(String from) throws SQLException {
 		ArrayList<Double> retList = new ArrayList<Double>();
-		Statement stm = conn.createStatement();
+		Statement stm = Util.conn.createStatement();
 		String query = Util.readQuery("QueryTemplates\\LinkCorrelations\\SelectEdgeTravelTimes.sql")
-				.replace("##PATH_NUM##", pathNumber)
+				.replace("##PATH_NUM##", Util.pathNumber)
 				.replace("##FROM##", from);
 		OracleResultSet ors = (OracleResultSet) stm.executeQuery(query);
 		while (ors.next()) 
@@ -130,11 +123,10 @@ public class GenerateLinkCorrelations {
 		return retList;
 	}
 	
-	private static void InsertCont(OracleConnection conn, String pathNumber,
-			String link1, String link2, Double cont) throws SQLException {
-		Statement stm = conn.createStatement();
+	private static void InsertCont(String link1, String link2, Double cont) throws SQLException {
+		Statement stm = Util.conn.createStatement();
 		String query = Util.readQuery("QueryTemplates\\LinkCorrelations\\InsertCont.sql")
-				.replace("##PATH_NUM##", pathNumber)
+				.replace("##PATH_NUM##", Util.pathNumber)
 				.replace("##LINK1##", link1)
 				.replace("##LINK2##", link2)
 				.replace("##CONT##", Double.toString(cont));
@@ -142,12 +134,11 @@ public class GenerateLinkCorrelations {
 		stm.close();
 	}
 	
-	private static ArrayList<Pair<Integer, Integer>> GetCongestions(OracleConnection conn,
-			String pathNumber, String link1, String link2) throws SQLException {
+	private static ArrayList<Pair<Integer, Integer>> GetCongestions(String link1, String link2) throws SQLException {
 		ArrayList<Pair<Integer, Integer>> retList = new ArrayList<Pair<Integer,Integer>>();
-		Statement stm = conn.createStatement();
+		Statement stm = Util.conn.createStatement();
 		String query = Util.readQuery("QueryTemplates\\LinkCorrelations\\SelectCong.sql")
-				.replace("##PATH_NUM##", pathNumber)
+				.replace("##PATH_NUM##", Util.pathNumber)
 				.replace("##FROM1##", link1)
 				.replace("##FROM2##", link2);
 		OracleResultSet ors = (OracleResultSet) stm.executeQuery(query);
@@ -159,11 +150,10 @@ public class GenerateLinkCorrelations {
 		return retList;
 	}
 	
-	private static void UpdateCong(OracleConnection conn, String pathNumber,
-			String link1, String link2, HashMap<String, Double> probs) throws SQLException {
-		Statement stm = conn.createStatement();
+	private static void UpdateCong(String link1, String link2, HashMap<String, Double> probs) throws SQLException {
+		Statement stm = Util.conn.createStatement();
 		String query = Util.readQuery("QueryTemplates//LinkCorrelations//UpdateCong.sql")
-				.replace("##PATH_NUM##", pathNumber)
+				.replace("##PATH_NUM##", Util.pathNumber)
 				.replace("##LINK1##", link1)
 				.replace("##LINK2##", link2)
 				.replace("##F2F##", Double.toString(probs.get("f2f")))

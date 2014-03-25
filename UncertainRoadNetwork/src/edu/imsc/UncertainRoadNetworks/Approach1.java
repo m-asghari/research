@@ -11,8 +11,7 @@ import edu.imsc.UncertainRoadNetworks.Util.PredictionMethod;
 
 public class Approach1 {
 	
-	public static NormalDist GenerateModel(String pathNumber,
-			String[] sensorList, String timeOfDay,
+	public static NormalDist GenerateModel(String[] sensorList, String timeOfDay,
 			ArrayList<Integer> days, Calendar startTime) throws SQLException, ParseException{
 		Calendar tod = Calendar.getInstance();
 		tod.setTime(Util.timeOfDayDF.parse(timeOfDay));
@@ -20,9 +19,9 @@ public class Approach1 {
 		NormalDist retDist = new NormalDist(0, 0);
 		for (int s = 0; s < sensorList.length - 1; ++s) {
 			String from = sensorList[s];
-			NormalDist edgeDist = Util.getNormalDist(pathNumber, from, tod, days);
+			NormalDist edgeDist = Util.getNormalDist(from, tod, days);
 			if (Util.predictionMethod == PredictionMethod.Interpolated) {
-				Double actualTravelTime = Util.GetActualTravelTime(pathNumber, from, (Calendar)startTime.clone());
+				Double actualTravelTime = Util.GetActualTravelTime(from, (Calendar)startTime.clone());
 				edgeDist = edgeDist.Interpolate(actualTravelTime, Util.alpha);
 			}
 			retDist.mean += edgeDist.mean;
@@ -31,17 +30,17 @@ public class Approach1 {
 		return retDist;
 	}
 
-	public static NormalDist GenerateActual(String pathNumber, String[] sensorList, 
+	public static NormalDist GenerateActual(String[] sensorList, 
 			ArrayList<Calendar> startTimes) throws SQLException, ParseException {
-		ArrayList<Double> travelTimes = SpeedUp.TimeInependentTravelTime(pathNumber, sensorList, startTimes);
+		ArrayList<Double> travelTimes = SpeedUp.TimeInependentTravelTime(sensorList, startTimes);
 		NormalDist retDist = new NormalDist(travelTimes);
 		return retDist;
 	}
 	
-	public static Double GenerateActual(String pathNumber, String[] sensorList,
+	public static Double GenerateActual(String[] sensorList,
 			Calendar startTime) throws SQLException, ParseException {
 		ArrayList<Calendar> temp = new ArrayList<Calendar>();
 		temp.add(startTime);
-		return SpeedUp.TimeInependentTravelTime(pathNumber, sensorList, temp).get(0);
+		return SpeedUp.TimeInependentTravelTime(sensorList, temp).get(0);
 	}
 }

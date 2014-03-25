@@ -13,13 +13,13 @@ import edu.imsc.UncertainRoadNetworks.Util.PredictionMethod;
 
 public class Approach4 {
 	
-	public static PMF GenerateModel(String pathNumber, String[] sensorList, String timeOfDay, 
+	public static PMF GenerateModel(String[] sensorList, String timeOfDay, 
 			ArrayList<Integer> days, Calendar startTime) throws SQLException, ParseException {
 		
 		PMF retPMF = new PMF();
 		for (int s = 0; s < sensorList.length - 1; ++s) {
 			String from = sensorList[s];
-			Double currTravelTime = Util.GetActualTravelTime(pathNumber, from, (Calendar)startTime.clone());
+			Double currTravelTime = Util.GetActualTravelTime(from, (Calendar)startTime.clone());
 			int min = retPMF.min;
 			int max = retPMF.max;
 			HashMap<Integer, PMF> edgePMFs = new HashMap<Integer, PMF>();
@@ -27,7 +27,7 @@ public class Approach4 {
 				Calendar time = Calendar.getInstance();
 				time.setTime(Util.timeOfDayDF.parse(timeOfDay));
 				time.add(Calendar.MINUTE, i);
-				PMF edgePMF = Util.getPMF(pathNumber, from, time, days);
+				PMF edgePMF = Util.getPMF(from, time, days);
 				if (Util.predictionMethod == PredictionMethod.Interpolated) {
 					edgePMF = edgePMF.Interpolate(currTravelTime, (Util.timeHorizon - min - i)/Util.timeHorizon);
 				}
@@ -47,9 +47,9 @@ public class Approach4 {
 		return retPMF;
 	}
 	
-	public static PMF GenerateActual(String pathNumber, String[] sensorList,
+	public static PMF GenerateActual(String[] sensorList,
 			ArrayList<Calendar> startTimes) throws SQLException, ParseException {
-		ArrayList<Calendar> endTimes = SpeedUp.TimeDependentTravelTime(pathNumber, sensorList, startTimes);
+		ArrayList<Calendar> endTimes = SpeedUp.TimeDependentTravelTime(sensorList, startTimes);
 		ArrayList<Double> travelTimes = new ArrayList<Double>();
 		for (int i = 0; i < startTimes.size(); ++i) {
 			travelTimes.add(SpeedUp.ToMinutes(startTimes.get(i), endTimes.get(i)));			
