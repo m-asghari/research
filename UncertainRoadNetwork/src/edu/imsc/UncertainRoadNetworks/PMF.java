@@ -57,12 +57,24 @@ public class PMF {
 		this.prob = new HashMap<Integer, Double>();
 		for (Entry<Integer, Integer> e : counts.entrySet()) {
 			double newProb = (double)e.getValue()/totalCount;
-			this.prob.put(e.getKey(), newProb);
+			if (newProb != 0.0) 
+				this.prob.put(e.getKey(), newProb);
 		}
 		if (totalCount == 0) {
 			this.min = 0;
 			this.max = 0;
 			this.prob.put(0, 1.0);
+		}
+	}
+	
+	public void Adjust() {
+		while (this.prob.get(this.min) == 0.0) {
+			this.prob.remove(this.min);
+			this.min++;
+		}
+		while (this.prob.get(this.max) == 0.0) {
+			this.prob.remove(this.max);
+			this.max--;
 		}
 	}
 	
@@ -87,7 +99,6 @@ public class PMF {
 		StringBuilder sb = new StringBuilder();
 		for (Entry<Integer, Double> e : this.prob.entrySet())
 			sb.append(String.format("P(%d): %f\t", e.getKey(), e.getValue()));
-		sb.append("\n");
 		return sb.toString();
 	}
 
@@ -113,14 +124,14 @@ public class PMF {
 		Double cdf = 0.0;
 		Double score = 0.0;
 		for (int i = min; i < Util.RoundDouble(actualTime); ++i) {
-			cdf += prob.get(i);
+			cdf += Prob(i);
 			score += Math.pow(cdf, 2);
 		}
-		cdf += prob.get(Util.RoundDouble(actualTime));
+		cdf += Prob(Util.RoundDouble(actualTime));
 		score += (actualTime - (Util.RoundDouble(actualTime) - 0.5)) * Math.pow(cdf, 2);
 		score += ((Util.RoundDouble(actualTime) + 0.5) - actualTime) * Math.pow(1-cdf, 2);
 		for (int i = Util.RoundDouble(actualTime) + 1; i <= this.max; ++i ) {
-			cdf += prob.get(i);
+			cdf += Prob(i);
 			score += Math.pow(1-cdf, 2);
 		}
 		return score;

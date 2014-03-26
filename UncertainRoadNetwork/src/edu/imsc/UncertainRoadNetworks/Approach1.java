@@ -19,13 +19,17 @@ public class Approach1 {
 		NormalDist retDist = new NormalDist(0, 0);
 		for (int s = 0; s < sensorList.length - 1; ++s) {
 			String from = sensorList[s];
+			Util.Log(String.format("\nfrom: %s", from));
 			NormalDist edgeDist = Util.getNormalDist(from, tod, days);
 			if (Util.predictionMethod == PredictionMethod.Interpolated) {
 				Double actualTravelTime = Util.GetActualTravelTime(from, (Calendar)startTime.clone());
-				edgeDist = edgeDist.Interpolate(actualTravelTime, Util.alpha);
+				if (actualTravelTime != 0.0)
+					edgeDist = edgeDist.Interpolate(actualTravelTime, Util.alpha);
 			}
 			retDist.mean += edgeDist.mean;
 			retDist.var += edgeDist.var;
+			Util.Log("Edge Dist: " + edgeDist.toString());
+			Util.Log("Ret Dist: " + retDist.toString());
 		}
 		return retDist;
 	}
@@ -42,5 +46,11 @@ public class Approach1 {
 		ArrayList<Calendar> temp = new ArrayList<Calendar>();
 		temp.add(startTime);
 		return SpeedUp.TimeInependentTravelTime(sensorList, temp).get(0);
+	}
+	
+	public static String GetResults(Calendar startTime, NormalDist modelDist, Double actualTime, Double score) {
+		String retStr = String.format("Start Time: %s, Model Distribution: %s, Actual Time: %f, Score: %f",
+				Util.oracleDF.format(startTime.getTime()), modelDist.toString(), actualTime, score);
+		return retStr;
 	}
 }

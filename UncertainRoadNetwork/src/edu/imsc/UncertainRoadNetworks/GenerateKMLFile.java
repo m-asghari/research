@@ -59,7 +59,7 @@ public class GenerateKMLFile {
 						.replace("##DIRECTION##", dir));
 			}
 			String kmlString = kmlTemplate.replace("##PLACEMARKS##", sb.toString());
-			FileWriter fw = new FileWriter("C:\\Users\\Mohammad\\Desktop\\sensors.kml");
+			FileWriter fw = new FileWriter("sensors.kml");
 			BufferedWriter bw = new BufferedWriter(fw);
 			bw.write(kmlString);
 			bw.close();

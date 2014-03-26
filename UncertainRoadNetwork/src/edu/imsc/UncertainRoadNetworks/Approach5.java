@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 
+import edu.imsc.UncertainRoadNetworks.Util.PredictionMethod;
+
 public class Approach5 {
 	
 	public static NormalDist GenerateModel(String[] sensorList, String timeOfDay, 
@@ -29,6 +31,11 @@ public class Approach5 {
 			String from = sensorList[s];
 			ArrayList<Double> travelTimes = allTravelTimes.get(from);
 			NormalDist edgeDist = new NormalDist(travelTimes);
+			if (Util.predictionMethod == PredictionMethod.Interpolated) {
+				Double actualTravelTime = Util.GetActualTravelTime(from, (Calendar)startTime.clone());
+				if (actualTravelTime != 0.0)
+					edgeDist = edgeDist.Interpolate(actualTravelTime, Util.alpha);
+			}
 			retDist.mean += edgeDist.mean;
 			retDist.var += edgeDist.var;
 			Double sum = 0.0;
@@ -41,15 +48,18 @@ public class Approach5 {
 		return retDist;
 	}
 	
-	public static NormalDist GenerateActual(String[] sensorList,
+	public static NormalDist GenerateActual(String[] sensorList, 
 			ArrayList<Calendar> startTimes) throws SQLException, ParseException {
-		ArrayList<Calendar> endTimes = SpeedUp.TimeDependentTravelTime(sensorList, startTimes);
-		ArrayList<Double> travelTimes = new ArrayList<Double>();
-		for (int i = 0; i < startTimes.size(); ++i) {
-			travelTimes.add(SpeedUp.ToMinutes(startTimes.get(i), endTimes.get(i)));			
-		}
+		ArrayList<Double> travelTimes = SpeedUp.TimeInependentTravelTime(sensorList, startTimes);
 		NormalDist retDist = new NormalDist(travelTimes);
 		return retDist;
+	}
+	
+	public static Double GenerateActual(String[] sensorList,
+			Calendar startTime) throws SQLException, ParseException {
+		ArrayList<Calendar> temp = new ArrayList<Calendar>();
+		temp.add(startTime);
+		return SpeedUp.TimeInependentTravelTime(sensorList, temp).get(0);
 	}
 
 }

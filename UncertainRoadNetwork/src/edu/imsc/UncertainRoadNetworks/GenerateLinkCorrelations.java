@@ -20,13 +20,11 @@ public class GenerateLinkCorrelations {
 			CreateTable();
 			HashMap<String, ArrayList<Double>> allTravelTimes = new HashMap<String, ArrayList<Double>>();
 			HashMap<String, Double> means = new HashMap<String, Double>();
-			//HashMap<String, Double> stds = new HashMap<String, Double>();
 			for (String edge : edges) {
 				ArrayList<Double> travelTimes = GetEdgeTravelTimes(edge);
-				Double mean = GetMean(travelTimes);
+				Double mean = Util.GetMean(travelTimes);
 				allTravelTimes.put(edge, travelTimes);
 				means.put(edge, mean);
-				//stds.put(edge, GetSTD(travelTimes, mean));
 			}
 			for (int i = 0; i < edges.length; ++i) {
 				String link1 = edges[i];
@@ -94,27 +92,16 @@ public class GenerateLinkCorrelations {
 
 	public static void CreateTable() throws SQLException{
 		Statement stm = Util.conn.createStatement();
-		String query = Util.readQuery("QueryTemplates\\LinkCorrelations\\CreateTable.sql")
+		String query = QueryTemplates.createLinkCorr
 				.replace("##PATH_NUM##", Util.pathNumber);
 		stm.execute(query);
 		stm.close();		
-	}	
-	
-	/*private static ArrayList<String> GetAllEdges(OracleConnection conn, String pathNumber) throws SQLException {
-		ArrayList<String> retList = new ArrayList<String>();
-		Statement stm = Util.conn.createStatement();
-		String query = Util.readQuery("QueryTemplates\\LinkCorrelations\\SelectEdges.sql")
-				.replace("##PATH_NUM##", pathNumber);
-		OracleResultSet ors = (OracleResultSet) stm.executeQuery(query);
-		while (ors.next())
-			retList.add(ors.getString(1));
-		return retList;
-	}*/
+	}
 	
 	private static ArrayList<Double> GetEdgeTravelTimes(String from) throws SQLException {
 		ArrayList<Double> retList = new ArrayList<Double>();
 		Statement stm = Util.conn.createStatement();
-		String query = Util.readQuery("QueryTemplates\\LinkCorrelations\\SelectEdgeTravelTimes.sql")
+		String query = QueryTemplates.selectEdgeTT
 				.replace("##PATH_NUM##", Util.pathNumber)
 				.replace("##FROM##", from);
 		OracleResultSet ors = (OracleResultSet) stm.executeQuery(query);
@@ -125,7 +112,7 @@ public class GenerateLinkCorrelations {
 	
 	private static void InsertCont(String link1, String link2, Double cont) throws SQLException {
 		Statement stm = Util.conn.createStatement();
-		String query = Util.readQuery("QueryTemplates\\LinkCorrelations\\InsertCont.sql")
+		String query = QueryTemplates.insertCont
 				.replace("##PATH_NUM##", Util.pathNumber)
 				.replace("##LINK1##", link1)
 				.replace("##LINK2##", link2)
@@ -137,7 +124,7 @@ public class GenerateLinkCorrelations {
 	private static ArrayList<Pair<Integer, Integer>> GetCongestions(String link1, String link2) throws SQLException {
 		ArrayList<Pair<Integer, Integer>> retList = new ArrayList<Pair<Integer,Integer>>();
 		Statement stm = Util.conn.createStatement();
-		String query = Util.readQuery("QueryTemplates\\LinkCorrelations\\SelectCong.sql")
+		String query = QueryTemplates.selectCong
 				.replace("##PATH_NUM##", Util.pathNumber)
 				.replace("##FROM1##", link1)
 				.replace("##FROM2##", link2);
@@ -152,7 +139,7 @@ public class GenerateLinkCorrelations {
 	
 	private static void UpdateCong(String link1, String link2, HashMap<String, Double> probs) throws SQLException {
 		Statement stm = Util.conn.createStatement();
-		String query = Util.readQuery("QueryTemplates//LinkCorrelations//UpdateCong.sql")
+		String query = QueryTemplates.updateCong
 				.replace("##PATH_NUM##", Util.pathNumber)
 				.replace("##LINK1##", link1)
 				.replace("##LINK2##", link2)
@@ -163,21 +150,4 @@ public class GenerateLinkCorrelations {
 		stm.execute(query);
 		stm.close();		
 	}
-	
-	private static Double GetMean(ArrayList<Double> input) {
-		Double sum = 0.0;
-		for (Double d : input)
-			sum += d;
-		int size = (input.size() == 0) ? 1 : input.size();
-		return sum/size;
-	}
-	
-	/*private static Double GetSTD(ArrayList<Double> input, Double mean) {
-		Double sum = 0.0;
-		for (Double d : input)
-			sum += Math.pow((d-mean), 2);
-		int size = (input.size() == 0) ? 1 : input.size();
-		return Math.sqrt(sum/size);
-	}*/
-
 }

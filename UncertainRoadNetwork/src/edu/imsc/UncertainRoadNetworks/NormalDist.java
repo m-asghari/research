@@ -28,10 +28,12 @@ public class NormalDist {
 		for (Double input : inputs)
 			sum += input;
 		this.mean = sum / inputs.size();
+		Util.Log(String.format("Sum: %f, Size: %d, Mean: %f", sum, inputs.size(), this.mean));
 		sum = 0.0;
 		for (Double input : inputs)
 			sum += Math.pow(input - this.mean, 2);
 		this.var = sum / inputs.size();
+		Util.Log(String.format("Sum: %f, Size: %d, Var: %f", sum, inputs.size(), this.var));
 		if (inputs.size() == 0) {
 			this.mean = 0;
 			this.var = 0;
@@ -43,7 +45,7 @@ public class NormalDist {
 	}
 	
 	public String toString() {
-		return String.format("Mean: %f Var: %f\n", this.mean, this.var);		
+		return String.format("Mean: %f Var: %f", this.mean, this.var);		
 	}
 
 	public NormalDist Interpolate(Double actualTravelTime, Double alpha) {

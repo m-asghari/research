@@ -29,21 +29,6 @@ public class SpeedUp {
 	private static int hoursPerDay = 12;
 	private static int testInterval = 5;
 
-	private static String edgeDistanceQueryTemplate = Util
-			.readQuery("QueryTemplates\\SelectEdgeDistance.sql");
-	private static String sensorSpeedsQueryTemplate = Util
-			.readQuery("QueryTemplates\\SelectSensorSpeeds.sql");
-	private static String sensorAvgSpeedQueryTemplate = Util
-			.readQuery("QueryTemplates\\SelectSensorAvgSpeed.sql");
-	private static String timeInDepTravelTimeTemplate = Util
-			.readQuery("QueryTemplates\\SelectTimeIndepTT.sql");
-	private static String timeDepTravelTimeTemplate = Util
-			.readQuery("QueryTemplates\\SelectTimeDepTT.sql");
-	private static String avgTravleTimeTemplate = Util
-			.readQuery("QueryTemplates\\SelectAvgTT.sql");
-	private static String avgLinkTravleTimeTemplate = Util
-			.readQuery("QueryTemplates\\SelectAvgLinkTT.sql");
-
 	private static FileWriter gfw;
 	private static BufferedWriter gbw;
 
@@ -62,10 +47,6 @@ public class SpeedUp {
 		Calendar endYearCal = Calendar.getInstance();
 		Calendar cal = Calendar.getInstance();
 		try {
-			DataPreparation.ClearPathSensorTable();
-			DataPreparation.PopulatePathSensorTable(sensorList);
-			DataPreparation.ClearPathEdgeTable();
-			DataPreparation.PopulatePathEdgeTable(sensorList.length);
 			// FileWriter fw = new FileWriter(String.format("fri_path%d.csv",
 			// pathNumber));
 			// BufferedWriter bw = new BufferedWriter(fw);
@@ -160,10 +141,10 @@ public class SpeedUp {
 		ArrayList<Double> retTimes = new ArrayList<Double>();
 
 		HashMap<String, Double> avgTravelTimes = new HashMap<String, Double>();
-		Statement avgStm = Util.conn.createStatement();
+		/*Statement avgStm = Util.conn.createStatement();
 		// select From, AVG(Travel_Time) From Path#_Edge_Patterns Group By From;
-		String avgQuery = avgTravleTimeTemplate.replace("##PATH_NUM##",
-				Util.pathNumber);
+		String avgQuery = QueryTemplates.avgTravleTime
+				.replace("##PATH_NUM##", Util.pathNumber);
 		OracleResultSet avgOrs = (OracleResultSet) avgStm
 				.executeQuery(avgQuery);
 		while (avgOrs.next()) {
@@ -171,11 +152,30 @@ public class SpeedUp {
 			Double tt = avgOrs.getDouble(2);
 			avgTravelTimes.put(from, tt);
 		}
+		avgOrs.close();
+		avgStm.close();*/
 
 		for (Calendar startTime : startTimes) {
+			Statement avgStm = Util.conn.createStatement();
+			// select From, AVG(Travel_Time) From Path#_Edge_Patterns Group By From;
+			String avgStartTime = Util.timeOfDayDF.format(Util.RoundTimeDown((Calendar)startTime.clone()).getTime());
+			String avgEndTime = Util.timeOfDayDF.format(Util.RoundTimeUp((Calendar)startTime.clone()).getTime());
+			String avgQuery = QueryTemplates.avgTravleTime
+					.replace("##PATH_NUM##", Util.pathNumber)
+					.replace("##START_TIME##", avgStartTime)
+					.replace("##END_TIME##", avgEndTime);
+			OracleResultSet avgOrs = (OracleResultSet) avgStm
+					.executeQuery(avgQuery);
+			while (avgOrs.next()) {
+				String from = avgOrs.getString(1);
+				Double tt = avgOrs.getDouble(2);
+				avgTravelTimes.put(from, tt);
+			}
+			avgOrs.close();
+			avgStm.close();
+			
 			@SuppressWarnings("unchecked")
-			HashMap<String, Double> travelTimes = (HashMap<String, Double>) avgTravelTimes
-					.clone();
+			HashMap<String, Double> travelTimes = (HashMap<String, Double>) avgTravelTimes.clone();
 			Statement stm = Util.conn.createStatement();
 			// select From, TravelTime From PathN_Edge_Patterns where time >=
 			// start_time and time <= end_time;
@@ -183,7 +183,7 @@ public class SpeedUp {
 					(Calendar) startTime.clone()).getTime());
 			String qEndTime = Util.oracleDF.format(Util.RoundTimeUp(
 					(Calendar) startTime.clone()).getTime());
-			String query = timeInDepTravelTimeTemplate
+			String query = QueryTemplates.timeInDepTravelTime
 					.replace("##PATH_NUM##", Util.pathNumber)
 					.replace("##START_TIME##", qStartTime)
 					.replace("##END_TIME##", qEndTime);
@@ -195,10 +195,13 @@ public class SpeedUp {
 			}
 			ors.close();
 			stm.close();
+			
+			Util.Log(travelTimes.toString());
 
 			Double sum = 0.0;
 			for (Map.Entry<String, Double> e : travelTimes.entrySet())
 				sum += e.getValue();
+			Util.Log(Double.toString(sum));
 			retTimes.add(sum);
 		}
 		return retTimes;
@@ -226,8 +229,9 @@ public class SpeedUp {
 			Statement avgStm = Util.conn.createStatement();
 			// select AVG(Travel_Time) From Path#_Edge_Patterns WHERE "FROM" =
 			// FROM;
-			String avgQuery = avgLinkTravleTimeTemplate.replace("##PATH_NUM##",
-					Util.pathNumber).replace("##FROM##", from);
+			String avgQuery = QueryTemplates.avgLinkTravleTime
+					.replace("##PATH_NUM##", Util.pathNumber)
+					.replace("##FROM##", from);
 			OracleResultSet avgOrs = (OracleResultSet) avgStm
 					.executeQuery(avgQuery);
 			while (avgOrs.next()) {
@@ -242,7 +246,7 @@ public class SpeedUp {
 			String endTime = Util.oracleDF.format(Util.RoundTimeUp(
 					(Calendar) currentTimes.get(currentTimes.size() - 1)
 							.clone()).getTime());
-			String query = timeDepTravelTimeTemplate
+			String query = QueryTemplates.timeDepTravelTime
 					.replace("##PATH_NUM##", Util.pathNumber)
 					.replace("##FROM##", from).replace("##TO##", to)
 					.replace("##START_TIME##", startTime)
@@ -296,7 +300,7 @@ public class SpeedUp {
 			String toSensor = sensorList[sensor + 1];
 			double distance = -1;
 			Statement distStm = Util.conn.createStatement();
-			String distQuery = edgeDistanceQueryTemplate
+			String distQuery = QueryTemplates.edgeDistanceQuery
 					.replace("##PATH_NUM##", Util.pathNumber)
 					.replace("##FROM##", fromSensor)
 					.replace("##TO##", toSensor);
@@ -322,12 +326,12 @@ public class SpeedUp {
 
 			double avgFromSp = 45, avgToSp = 45;
 
-			String spQueryTemplate = sensorSpeedsQueryTemplate.replace(
-					"##START_TIME##", startTime).replace("##END_TIME##",
-					endTime);
-			String avgSpQueryTemplate = sensorAvgSpeedQueryTemplate.replace(
-					"##START_TIME##", startTime).replace("##END_TIME##",
-					endTime);
+			String spQueryTemplate = QueryTemplates.sensorSpeedsQuery
+					.replace("##START_TIME##", startTime)
+					.replace("##END_TIME##", endTime);
+			String avgSpQueryTemplate = QueryTemplates.sensorAvgSpeedQuery
+					.replace("##START_TIME##", startTime)
+					.replace("##END_TIME##", endTime);
 
 			Statement fromSpStm = Util.conn.createStatement();
 			String fromSpQuery = spQueryTemplate.replace("##LINK_ID##",

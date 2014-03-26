@@ -19,11 +19,6 @@ public class Approach7 {
 		Calendar tod = Calendar.getInstance();
 		tod.setTime(Util.timeOfDayDF.parse(timeOfDay));
 		
-		Pair<Integer, Integer> f2f = new Pair<Integer, Integer>(0, 0);
-		Pair<Integer, Integer> f2t = new Pair<Integer, Integer>(0, 1);
-		Pair<Integer, Integer> t2f = new Pair<Integer, Integer>(1, 0);
-		Pair<Integer, Integer> t2t = new Pair<Integer, Integer>(1, 1);		
-		
 		PMF congPMF = Util.getPMF(sensorList[0], tod, days, true);
 		PMF normPMF = Util.getPMF(sensorList[0], tod, days, false);
 		for (int s = 1; s < sensorList.length - 1; ++s) {
@@ -34,7 +29,7 @@ public class Approach7 {
 			int prevMax = Math.max(congPMF.max, normPMF.max);
 			HashMap<Integer, PMF> edgeNormPMFs = new HashMap<Integer, PMF>();
 			HashMap<Integer, PMF> edgeCongPMFs = new HashMap<Integer, PMF>();
-			HashMap<Integer, HashMap<Pair<Integer, Integer>, Double> > transitionProbs = new HashMap<Integer, HashMap<Pair<Integer,Integer>,Double>>();
+			ArrayList<Double> transitionProbs = Util.congChangeProb.get(new Pair<String, String>(prev, from));
 			for (int i = prevMin; i <= prevMax; ++i) {
 				Calendar time = Calendar.getInstance();
 				time.setTime(Util.timeOfDayDF.parse(timeOfDay));
@@ -42,19 +37,20 @@ public class Approach7 {
 				PMF edgeNormPMF = Util.getPMF(from, time, days, false);
 				PMF edgeCongPMF = Util.getPMF(from, time, days, true);
 				if (Util.predictionMethod == PredictionMethod.Interpolated) {
-					edgeNormPMF = edgeNormPMF.Interpolate(currTravelTime, (Util.timeHorizon - prevMin - i)/Util.timeHorizon);
-					edgeCongPMF = edgeCongPMF.Interpolate(currTravelTime, (Util.timeHorizon - prevMin - i)/Util.timeHorizon);
+					if (currTravelTime != 0.0) {
+						edgeNormPMF = edgeNormPMF.Interpolate(currTravelTime, (Util.timeHorizon - prevMin - i)/Util.timeHorizon);
+						edgeCongPMF = edgeCongPMF.Interpolate(currTravelTime, (Util.timeHorizon - prevMin - i)/Util.timeHorizon);
+					}
 				}
 				edgeNormPMFs.put(i, Util.getPMF(from, time, days, false));
 				edgeCongPMFs.put(i, Util.getPMF(from, time, days, true));
-				transitionProbs.put(i, Util.getCongestionChange(prev, from, time, days));
 			}
 			PMF newCongPMF = new PMF(prevMin + edgeCongPMFs.get(prevMin).min, prevMax + edgeCongPMFs.get(prevMax).max);
 			for (int b = newCongPMF.min; b <= newCongPMF.max; ++b) {
 				Double sum = 0.0;
 				for (int h = prevMin; h <= prevMax; ++h) {
-					sum += transitionProbs.get(h).get(t2t) * congPMF.Prob(h) * edgeCongPMFs.get(h).Prob(b-h);
-					sum += transitionProbs.get(h).get(f2t) * normPMF.Prob(h) * edgeCongPMFs.get(h).Prob(b-h);
+					sum += transitionProbs.get(Util.t2t) * congPMF.Prob(h) * edgeCongPMFs.get(h).Prob(b-h);
+					sum += transitionProbs.get(Util.f2t) * normPMF.Prob(h) * edgeCongPMFs.get(h).Prob(b-h);
 				}
 				newCongPMF.prob.put(b, sum);
 			}
@@ -63,8 +59,8 @@ public class Approach7 {
 			for (int b = newNormPMF.min; b <= newNormPMF.max; ++b) {
 				Double sum = 0.0;
 				for (int h = prevMin; h <= prevMax; ++h) {
-					sum += transitionProbs.get(h).get(t2f) * congPMF.Prob(h) * edgeNormPMFs.get(h).Prob(b-h);
-					sum += transitionProbs.get(h).get(f2f) * normPMF.Prob(h) * edgeNormPMFs.get(h).Prob(b-h);
+					sum += transitionProbs.get(Util.t2f) * congPMF.Prob(h) * edgeNormPMFs.get(h).Prob(b-h);
+					sum += transitionProbs.get(Util.f2f) * normPMF.Prob(h) * edgeNormPMFs.get(h).Prob(b-h);
 				}
 				newCongPMF.prob.put(b, sum);
 			}

@@ -29,7 +29,8 @@ public class Approach4 {
 				time.add(Calendar.MINUTE, i);
 				PMF edgePMF = Util.getPMF(from, time, days);
 				if (Util.predictionMethod == PredictionMethod.Interpolated) {
-					edgePMF = edgePMF.Interpolate(currTravelTime, (Util.timeHorizon - min - i)/Util.timeHorizon);
+					if (currTravelTime != 0.0)
+						edgePMF = edgePMF.Interpolate(currTravelTime, (Util.timeHorizon - min - i)/Util.timeHorizon);
 				}
 				edgePMFs.put(i, edgePMF);
 			}
@@ -58,4 +59,10 @@ public class Approach4 {
 		return retPMF;
 	}
 	
+	
+	public static String GetResults(Calendar startTime, Double actualTime, Double score) {
+		String retStr = String.format("Start Time: %s, Actual Time: %f, Score: %f",
+				Util.oracleDF.format(startTime.getTime()), actualTime, score);
+		return retStr;
+	}
 }

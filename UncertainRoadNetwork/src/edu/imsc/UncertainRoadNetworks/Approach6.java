@@ -9,7 +9,6 @@ import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.HashMap;
 
 import edu.imsc.UncertainRoadNetworks.Util.PredictionMethod;
 
@@ -24,12 +23,7 @@ public class Approach6 {
 		tod.setTime(Util.timeOfDayDF.parse(timeOfDay));
 		
 		FileWriter fw = new FileWriter("logs.txt");
-		BufferedWriter bw = new BufferedWriter(fw);
-		
-		Pair<Integer, Integer> f2f = new Pair<Integer, Integer>(0, 0);
-		Pair<Integer, Integer> f2t = new Pair<Integer, Integer>(0, 1);
-		Pair<Integer, Integer> t2f = new Pair<Integer, Integer>(1, 0);
-		Pair<Integer, Integer> t2t = new Pair<Integer, Integer>(1, 1);		
+		BufferedWriter bw = new BufferedWriter(fw);	
 		
 		//bw.write(String.format("%s\n", sensorList[0]));
 		PMF congPMF = Util.getPMF(sensorList[0], tod, days, true);
@@ -39,14 +33,15 @@ public class Approach6 {
 		for (int s = 1; s < sensorList.length - 1; ++s) {
 			String prev = sensorList[s-1];
 			String from = sensorList[s];
-			HashMap<Pair<Integer, Integer>, Double> transitionProb = Util.getCongestionChange(prev, from, tod, days);
+			ArrayList<Double> transitionProb = Util.congChangeProb.get(new Pair<String, String>(prev, from));
 			PMF edgeCongPMF = Util.getPMF(from, tod, days, true);
 			PMF edgeNormPMF = Util.getPMF(from, tod, days, false);
-			// TODO interpolate both edges if necessary ...
 			if (Util.predictionMethod == PredictionMethod.Interpolated) {
 				Double currTravelTime = Util.GetActualTravelTime(from, (Calendar)startTime.clone());
-				edgeCongPMF = edgeCongPMF.Interpolate(currTravelTime, Util.alpha);
-				edgeNormPMF = edgeNormPMF.Interpolate(currTravelTime, Util.alpha);
+				if (currTravelTime != 0.0) {
+					edgeCongPMF = edgeCongPMF.Interpolate(currTravelTime, Util.alpha);
+					edgeNormPMF = edgeNormPMF.Interpolate(currTravelTime, Util.alpha);
+				}				
 			}
 			//bw.write(String.format("%s\n", sensorList[s]));
 			//bw.write(String.format("Transitions: %s\n", transitionProb.toString()));
@@ -59,9 +54,9 @@ public class Approach6 {
 			PMF newCongPMF = new PMF(prevMin + edgeCongPMF.min, prevMax + edgeCongPMF.max);
 			for (int b = newCongPMF.min; b <= newCongPMF.max; ++b) {
 				Double sum = 0.0;
-				for (int h = prevMin; h <= prevMax; ++h) {
-					sum += transitionProb.get(t2t) * congPMF.Prob(h) * edgeCongPMF.Prob(b-h);
-					sum += transitionProb.get(f2t) * normPMF.Prob(h) * edgeCongPMF.Prob(b-h);
+				for (int h = prevMin; h <= prevMax; ++h) { 
+					sum += transitionProb.get(Util.t2t) * congPMF.Prob(h) * edgeCongPMF.Prob(b-h);
+					sum += transitionProb.get(Util.f2t) * normPMF.Prob(h) * edgeCongPMF.Prob(b-h);
 				}
 				newCongPMF.prob.put(b, sum);
 			}
@@ -69,8 +64,8 @@ public class Approach6 {
 			for (int b = newNormPMF.min; b <= newNormPMF.max; ++b) {
 				Double sum = 0.0;
 				for (int h = prevMin; h <= prevMax; ++h) {
-					sum += transitionProb.get(t2f) * congPMF.Prob(h) * edgeNormPMF.Prob(b-h);
-					sum += transitionProb.get(f2f) * normPMF.Prob(h) * edgeNormPMF.Prob(b-h);
+					sum += transitionProb.get(Util.t2f) * congPMF.Prob(h) * edgeNormPMF.Prob(b-h);
+					sum += transitionProb.get(Util.f2f) * normPMF.Prob(h) * edgeNormPMF.Prob(b-h);
 				}
 				newCongPMF.prob.put(b, sum);
 			}

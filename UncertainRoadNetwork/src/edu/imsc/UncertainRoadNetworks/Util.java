@@ -1,6 +1,4 @@
 package edu.imsc.UncertainRoadNetworks;
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -18,6 +16,8 @@ import oracle.jdbc.driver.OracleResultSet;
 
 public class Util {
 	
+	private static Logging logger = new Logging();
+	
 	private static final String host = "gd.usc.edu";
 	private static final String port = "1521";
 	private static final String service = "adms";
@@ -25,16 +25,16 @@ public class Util {
 	private static final String password = "phe334";
 	public static final OracleConnection conn = getConnection();
 	
-	public static final String path = "768701-774344-770599-768297-768283-770587-770012-770024-770036-770354-770048-770331-770544-770061-770556-770076-771202-770089-770103-770475-770487-770116-769895-769880-769866-769847-767610-767598-718076-767471-718072-767454-762329-767621-767573-718066-767542-718064-767495-716955-716949-760650-718045-760643-760635-774671-718166";
-	public static final String pathNumber = "1";
+	public static final String path = "759427-761482-761492-717776-717777";
+	public static final String pathNumber = "0";
 	
 	public static enum PredictionMethod {Historic, Filtered, Interpolated};
 	public static PredictionMethod predictionMethod = PredictionMethod.Historic;
 	public static final Double alpha = 0.5;
 	public static final Double timeHorizon = 60.0;
 	
-	public static HashMap<Pair<String, String>, Double> pearsonCorrCoef = PearsonCorrCoef();
-	public static HashMap<Pair<String, String>, ArrayList<Double>> congChangeProb = CongChageProbs();
+	public static HashMap<Pair<String, String>, Double> pearsonCorrCoef;
+	public static HashMap<Pair<String, String>, ArrayList<Double>> congChangeProb;
 	public static final int f2f = 0;
 	public static final int f2t = 1;
 	public static final int t2f = 2;
@@ -43,11 +43,10 @@ public class Util {
 	public static DateFormat oracleDF = new SimpleDateFormat("dd-MMM-yy hh.mm.ss.SSS a");
 	public static DateFormat timeOfDayDF = new SimpleDateFormat("HH:mm:ss");
 	
-	private static String ttQueryTemplate = readQuery("QueryTemplates/ttQuery.sql");
-	private static String ttCongQueryTemplate = readQuery("QueryTemplates/ttCongQuery.sql");
-	private static String singleTTQueryTemplate = readQuery("QueryTemplates/singleTTQuery.sql");
-	private static String congQueryTemplate = readQuery("QueryTemplates/congQuery.sql");
-	private static String pearsonQueryTemplate = readQuery("QueryTemplates/PearsonQuery.sql");
+	public static void Initialize() {
+		pearsonCorrCoef = PearsonCorrCoef();
+		congChangeProb = CongChageProbs();
+	}
 	
 	private static OracleConnection getConnection()
 	{
@@ -66,44 +65,27 @@ public class Util {
 		}		
 		return conn;
 	}
-
-	public static String readQuery(String fileName)
-	{
-		String query = new String();
-		try
-		{
-			//File folder = new File("QueryTemplates");
-			//File[] files = folder.listFiles();
-			FileReader fr = new FileReader(fileName);
-			BufferedReader br = new BufferedReader(fr);
-			
-			String line;
-			StringBuilder sb = new StringBuilder();
-			while ((line = br.readLine()) != null)
-			{
-				sb.append(line);
-				sb.append("\n");
-			}
-			query = sb.toString();
-			br.close();
-			fr.close();
-		}
-		catch (Exception e)
-		{
-			e.printStackTrace();
-		}
-		return query;
+	
+	public static void Log(String message) {
+		logger.Add(message);
 	}
 	
 	public static NormalDist getNormalDist(String from, Calendar time,
 			ArrayList<Integer> days) throws SQLException, ParseException {
 		ArrayList<Double> travelTimes = getTravelTimes(from, time, days);
+		if (travelTimes.size() == 0) {
+			travelTimes.add(GetAverageEdgeTravelTime(from, time));
+		}
+		//Util.Log(String.format("TravelTimes: %s", travelTimes.toString()));
 		return new NormalDist(travelTimes);
 	}
-	
+
 	public static PMF getPMF(String from, Calendar time,
 			ArrayList<Integer> days) throws SQLException, ParseException{
 		ArrayList<Double> travelTimes = getTravelTimes(from, time, days);
+		if (travelTimes.size() == 0) {
+			travelTimes.add(GetAverageEdgeTravelTime(from, time));
+		}
 		return new PMF(travelTimes);
 	}
 	
@@ -116,19 +98,24 @@ public class Util {
 	public static ArrayList<Integer> FilterDays(ArrayList<Integer> days, String from, 
 			Calendar startTimeStamp) throws SQLException, ParseException{
 		String startTime = oracleDF.format(RoundTimeDown((Calendar)startTimeStamp.clone()).getTime()); 
+		String endTime = oracleDF.format(RoundTimeUp((Calendar)startTimeStamp.clone()).getTime());
 		Statement stm = conn.createStatement();
-		String query = singleTTQueryTemplate
+		String query = QueryTemplates.singleTTQuery
 				.replace("##PATH_NUM##", pathNumber)
 				.replace("##FROM##", from)
-				.replace("##START_TIME##", startTime);
+				.replace("##START_TIME##", startTime)
+				.replace("##END_TIME##", endTime);
 		OracleResultSet ors = (OracleResultSet) stm.executeQuery(query);
-		Double startTravelTime = 1.0;
+		Double startTravelTime = 0.0;
 		if (ors.next()) startTravelTime = ors.getDouble(1);
+		else {
+			startTravelTime = GetMean(getTravelTimes(from, (Calendar)startTimeStamp.clone(), days));
+		}
 		ors.close();
 		
 		startTime = timeOfDayDF.format(RoundTimeDown((Calendar)startTimeStamp.clone()).getTime());
-		String endTime = timeOfDayDF.format(RoundTimeUp((Calendar)startTimeStamp.clone()).getTime());
-		query = ttQueryTemplate
+		endTime = timeOfDayDF.format(RoundTimeUp((Calendar)startTimeStamp.clone()).getTime());
+		query = QueryTemplates.ttQuery
 				.replace("##PATH_NUM##", pathNumber)
 				.replace("##FROM##", from)
 				.replace("##START_TIME##", startTime)
@@ -136,7 +123,8 @@ public class Util {
 		ors = (OracleResultSet) stm.executeQuery(query);
 		ArrayList<Integer> filteredDays = new ArrayList<Integer>();
 		int daysIdx = 0;
-		while (ors.next()) {
+		boolean cont = true;
+		while (ors.next() && cont) {
 			Calendar dayCal = Calendar.getInstance();
 			dayCal.setTime(ors.getTimestamp(1));
 			Integer day = dayCal.get(Calendar.DAY_OF_YEAR);
@@ -144,6 +132,10 @@ public class Util {
 			while (days.get(daysIdx) < day) 
 				if (daysIdx < days.size() - 1) 
 					daysIdx++;
+				else {
+					cont = false;
+					break;
+				}
 			if (days.get(daysIdx) == day)
 				if (Math.abs(travelTime - startTravelTime) <= 0.3)
 					filteredDays.add(day);
@@ -159,11 +151,13 @@ public class Util {
 		
 		
 		String startTimeStr = oracleDF.format(RoundTimeDown((Calendar)startTime.clone()).getTime()); 
+		String endTimeStr = oracleDF.format(RoundTimeUp((Calendar)startTime.clone()).getTime());
 		Statement stm = conn.createStatement();
-		String qeury = singleTTQueryTemplate
+		String qeury = QueryTemplates.singleTTQuery
 				.replace("##PATH_NUM##", pathNumber)
 				.replace("##FROM##", from)
-				.replace("##START_TIME##", startTimeStr);
+				.replace("##START_TIME##", startTimeStr)
+				.replace("##END_TIME##", endTimeStr);
 		OracleResultSet ors = (OracleResultSet) stm.executeQuery(qeury);
 		if (ors.next()) retValue = ors.getDouble(1);
 		ors.close();
@@ -178,7 +172,7 @@ public class Util {
 		String startTime = timeOfDayDF.format(RoundTimeDown((Calendar)time.clone()).getTime());
 		String endTime = timeOfDayDF.format(RoundTimeUp((Calendar)time.clone()).getTime());
 		//SELECT TIME, TRAVEL_TIME FROM PATH#_EDGE_PATTERNS WHERE FROM, TO, START <= TOD AND END >= TOD
-		String query = ttQueryTemplate
+		String query = QueryTemplates.ttQuery
 				.replace("##PATH_NUM##", pathNumber)
 				.replace("##FROM##", from)
 				.replace("##START_TIME##", startTime)
@@ -186,13 +180,18 @@ public class Util {
 		OracleResultSet ors = (OracleResultSet) stm.executeQuery(query);
 		ArrayList<Double> travelTimes = new ArrayList<Double>();
 		int daysIdx = 0;
-		while (ors.next()) {
+		boolean cont = true;
+		while (ors.next() && cont) {
 			Calendar dayCal = Calendar.getInstance();
 			dayCal.setTime(ors.getTimestamp(1));
 			Integer day = dayCal.get(Calendar.DAY_OF_YEAR);
 			while (days.get(daysIdx) < day) 
-				if (daysIdx < days.size() - 1) 
+				if (daysIdx < days.size() - 1)
 					daysIdx++;
+				else {
+					cont = false;
+					break;
+				}
 			if (days.get(daysIdx) == day)
 				travelTimes.add(ors.getDouble(2));
 		}
@@ -208,7 +207,7 @@ public class Util {
 		String startTime = timeOfDayDF.format(RoundTimeDown((Calendar)time.clone()).getTime());
 		String endTime = timeOfDayDF.format(RoundTimeUp((Calendar)time.clone()).getTime());
 		//SELECT TIME, TRAVEL_TIME FROM PATH#_EDGE_PATTERNS WHERE FROM, TO, START <= TOD AND END >= TOD
-		String query = ttCongQueryTemplate
+		String query = QueryTemplates.ttCongQuery
 				.replace("##PATH_NUM##", pathNumber)
 				.replace("##FROM##", from)
 				.replace("##START_TIME##", startTime)
@@ -217,19 +216,42 @@ public class Util {
 		OracleResultSet ors = (OracleResultSet) stm.executeQuery(query);
 		ArrayList<Double> travelTimes = new ArrayList<Double>();
 		int daysIdx = 0;
-		while (ors.next()) {
+		boolean cont = true;
+		while (ors.next() && cont) {
 			Calendar dayCal = Calendar.getInstance();
 			dayCal.setTime(ors.getTimestamp(1));
 			Integer day = dayCal.get(Calendar.DAY_OF_YEAR);
 			while (days.get(daysIdx) < day) 
 				if (daysIdx < days.size() - 1) 
 					daysIdx++;
+				else {
+					cont = false;
+					break;
+				}
 			if (days.get(daysIdx) == day)
 				travelTimes.add(ors.getDouble(2));
 		}
 		ors.close();
 		stm.close();
 		return travelTimes;
+	}
+	
+	private static Double GetAverageEdgeTravelTime(String from, Calendar tod) throws SQLException {
+		Statement stm = conn.createStatement();
+		String startTime = Util.timeOfDayDF.format(Util.RoundTimeDown((Calendar)tod.clone()).getTime());
+		String endTime = Util.timeOfDayDF.format(Util.RoundTimeUp((Calendar)tod.clone()).getTime());
+		String query = QueryTemplates.avgLinkTravleTime
+				.replace("##PATH_NUM##", Util.pathNumber)
+				.replace("##FROM##", from)
+				.replace("##START_TIME##", startTime)
+				.replace("##END_TIME##", endTime);
+		OracleResultSet ors = (OracleResultSet) stm.executeQuery(query);
+		Double retVal = 0.0;
+		if (ors.next())
+			retVal = ors.getDouble(1);
+		ors.close();
+		stm.close();
+		return retVal;
 	}
 	
 	public static ArrayList<Double> Interpolate(ArrayList<Double> input, Double v, Double alpha) {
@@ -272,7 +294,7 @@ public class Util {
 		Statement stm = conn.createStatement();
 		//String startTime = timeOfDayDF.format(RoundTimeDown((Calendar)time.clone()).getTime());
 		//String endTime = timeOfDayDF.format(RoundTimeUp((Calendar)time.clone()).getTime());
-		String query = congQueryTemplate
+		String query = QueryTemplates.congQuery
 				.replace("##PATH_NUM##", pathNumber)
 				.replace("##FROM1##", from1)
 				.replace("##FROM2##", from2);
@@ -327,7 +349,7 @@ public class Util {
 		
 		try {
 			Statement stm = conn.createStatement();
-			String query = pearsonQueryTemplate
+			String query = QueryTemplates.pearsonQuery
 					.replace("##PATH_NUM##", pathNumber);
 			OracleResultSet ors = (OracleResultSet) stm.executeQuery(query);
 			while (ors.next()) {
@@ -350,7 +372,7 @@ public class Util {
 		
 		try {
 			Statement stm = conn.createStatement();
-			String query = congQueryTemplate
+			String query = QueryTemplates.congQuery
 					.replace("##PATH_NUM##", pathNumber);
 			OracleResultSet ors = (OracleResultSet) stm.executeQuery(query);
 			while (ors.next()) {
@@ -370,5 +392,13 @@ public class Util {
 			e.printStackTrace();
 		}
 		return retMap;
+	}
+	
+	public static Double GetMean(ArrayList<Double> input) {
+		Double sum = 0.0;
+		for (Double d : input)
+			sum += d;
+		int size = (input.size() == 0) ? 1 : input.size();
+		return sum/size;
 	}
 }

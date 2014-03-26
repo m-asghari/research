@@ -18,13 +18,13 @@ public class StartTimeGenerator {
 		this.hour = startTime.get(Calendar.HOUR_OF_DAY);
 		this.minute = startTime.get(Calendar.MINUTE);
 		nextDay = new HashMap<Integer, Integer>();
-		this.nextDay.put(Calendar.SATURDAY, 8);
+		this.nextDay.put(Calendar.SATURDAY, 1);
 		this.nextDay.put(Calendar.SUNDAY, 6);
-		this.nextDay.put(Calendar.MONDAY, 2);
-		this.nextDay.put(Calendar.TUESDAY, 2);
-		this.nextDay.put(Calendar.WEDNESDAY, 6);
+		this.nextDay.put(Calendar.MONDAY, 1);
+		this.nextDay.put(Calendar.TUESDAY, 1);
+		this.nextDay.put(Calendar.WEDNESDAY, 1);
 		this.nextDay.put(Calendar.THURSDAY, 4);
-		this.nextDay.put(Calendar.FRIDAY, 14);
+		this.nextDay.put(Calendar.FRIDAY, 7);
 	}
 	
 	public void SetNextDays(int[] input) {
