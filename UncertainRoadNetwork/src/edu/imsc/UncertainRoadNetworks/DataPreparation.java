@@ -1,5 +1,7 @@
 package edu.imsc.UncertainRoadNetworks;
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.SQLException;
@@ -8,6 +10,8 @@ import java.sql.Statement;
 import oracle.jdbc.driver.OracleResultSet;
 
 public class DataPreparation {
+	public static FileWriter fw;
+	public static BufferedWriter bw; 
 	
 	public static void GeneratePathSensorTable(String[] sensorList) throws SQLException {
 		//Create a new table
@@ -92,21 +96,36 @@ public class DataPreparation {
 	}
 	
 	public static void GeneratePathQueries(String[] sensorList) throws SQLException, IOException {
-		FileWriter fw = new FileWriter(String.format("Path%s_Queries.sql", Util.pathNumber));
-		BufferedWriter bw = new BufferedWriter(fw);
+		//FileWriter fw = new FileWriter(String.format("Path%s_Queries.sql", Util.pathNumber));
+		//BufferedWriter bw = new BufferedWriter(fw);
 		
 		GeneratePathSensorTable(sensorList);
 		bw.write(GeneratePathEdgeTable(sensorList.length));
 		bw.write(QueryTemplates.pathPatterns.replace("##PATH_NUM##", Util.pathNumber));
 		
-		bw.close();
-		fw.close();
+		//bw.close();
+		//fw.close();
 	}
 
 	public static void main(String[] args) {
-		String[] sensorList = Util.path.split("-");
 		try {
-			GeneratePathQueries(sensorList);
+			fw = new FileWriter("linkQueries.sql");
+			bw = new BufferedWriter(fw);
+			FileReader fr = new FileReader("links.txt");
+			BufferedReader br = new BufferedReader(fr);
+			String link = "";
+			int pathN = 0;
+			while ((link = br.readLine()) != null) {
+				pathN++;
+				Util.pathNumber = Integer.toString(pathN);
+				Util.path = link;
+				String[] sensorList = Util.path.split("-");
+				GeneratePathQueries(sensorList);
+			}
+			br.close();
+			fr.close();
+			bw.close();
+			fw.close();
 		}
 		catch (Exception e) {
 			e.printStackTrace();

@@ -36,9 +36,7 @@ public class GenerateKMLFile {
 			"\t\t</Placemark>\n";
 
 	public static void main(String[] args) {
-		String query = "SELECT DISTINCT SC.LINK_ID, t.Y, t.X, SC.DIRECTION " + 
-				"FROM SENSOR_CONFIG SC, table(SDO_UTIL.GETVERTICES(SC.START_LAT_LONG)) t " +
-				"ORDER BY SC.LINK_ID";
+		String query = QueryTemplates.KMLGenerationQuery;
 		OracleResultSet ors = null;
 		try {
 			Statement stm = Util.conn.createStatement();

@@ -25,13 +25,14 @@ public class Util {
 	private static final String password = "phe334";
 	public static final OracleConnection conn = getConnection();
 	
-	public static final String path = "759427-761482-761492-717776-717777";
-	public static final String pathNumber = "0";
+	public static String path = "759427-761482-761492-717776-717777";
+	public static String pathNumber = "0";
 	
 	public static enum PredictionMethod {Historic, Filtered, Interpolated};
 	public static PredictionMethod predictionMethod = PredictionMethod.Historic;
-	public static final Double alpha = 0.5;
-	public static final Double timeHorizon = 60.0;
+	public static Double similarityThreshold = 0.1;
+	public static Double alpha = 0.5;
+	public static Double timeHorizon = 60.0;
 	
 	public static HashMap<Pair<String, String>, Double> pearsonCorrCoef;
 	public static HashMap<Pair<String, String>, ArrayList<Double>> congChangeProb;
@@ -137,7 +138,7 @@ public class Util {
 					break;
 				}
 			if (days.get(daysIdx) == day)
-				if (Math.abs(travelTime - startTravelTime) <= 0.3)
+				if (Math.abs(travelTime - startTravelTime) <= similarityThreshold)
 					filteredDays.add(day);
 		}
 		ors.close();
