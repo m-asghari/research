@@ -15,7 +15,7 @@ public class Logging {
 	
 	public Logging() {
 		try {
-			this.fw = new FileWriter("logs.txt");
+			this.fw = new FileWriter("logs.log");
 			this.bw = new BufferedWriter(fw);
 		}
 		catch (IOException e) {
