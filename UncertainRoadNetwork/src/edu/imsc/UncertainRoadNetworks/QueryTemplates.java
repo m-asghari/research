@@ -54,6 +54,7 @@ public class QueryTemplates {
 	public static String selectEdgeInfo = readQuery("QueryTemplates\\DataPreparation\\SelectEdgeInfo.sql");
 	public static String insertEdgeInfo = readQuery("QueryTemplates\\DataPreparation\\InsertEdgeInfo.sql");
 	public static String pathPatterns = readQuery("QueryTemplates\\DataPreparation\\PathPatterns.sql");
+	public static String updateTT = readQuery("QueryTemnplates\\DataPreparation\\UpdateTravelTimes.sql");
 	
 	//GenerateLinkCorrelations.java
 	public static String createLinkCorr = readQuery("QueryTemplates\\LinkCorrelations\\CreateTable.sql");

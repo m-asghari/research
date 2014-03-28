@@ -323,9 +323,9 @@ public class Util {
 		return retValue;
 	}
 
-	public static int RoundDouble(double input) {
-		int retValue = (int) input;
-		if (input % 1 > 0.5) retValue++;
+	public static int RoundDouble(double input, int base) {
+		int retValue = (int)input/base;
+		if (input % base > (double)base/2) retValue += base;
 		return retValue;
 	}
 		
@@ -367,7 +367,6 @@ public class Util {
 		return retMap;
 	}
 	
-
 	private static HashMap<Pair<String, String>, ArrayList<Double>> CongChageProbs() {
 		HashMap<Pair<String, String>, ArrayList<Double>> retMap = new HashMap<Pair<String,String>, ArrayList<Double>>();
 		

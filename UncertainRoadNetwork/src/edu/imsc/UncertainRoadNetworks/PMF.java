@@ -5,6 +5,8 @@ import java.util.Map.Entry;
 
 
 public class PMF {
+	private static int binWidth = 15;
+	
 	public int min;
 	public int max;
 	public HashMap<Integer, Double> prob;
@@ -28,10 +30,11 @@ public class PMF {
 		HashMap<Integer, Integer> counts = new HashMap<Integer, Integer>();
 		int totalCount = 0;
 		for (double input : inputs) {
-			int newValue = (int) input;
+			int newValue = Util.RoundDouble(input, binWidth);
 			this.min = (this.min > newValue) ? newValue : this.min;
 			this.max = (this.max < newValue) ? newValue : this.max;
-			counts.put(newValue, counts.get(newValue) + 1);
+			Integer prev = (counts.get(newValue) == null) ? 0 : counts.get(newValue);
+			counts.put(newValue, prev + 1);
 			totalCount++;
 		}
 		this.prob = new HashMap<Integer, Double>();
@@ -47,7 +50,7 @@ public class PMF {
 		HashMap<Integer, Integer> counts = new HashMap<Integer, Integer>();
 		int totalCount = 0;
 		for (double input : inputs) {
-			int newValue = Util.RoundDouble(input);
+			int newValue = Util.RoundDouble(input, binWidth);
 			this.min = (this.min > newValue) ? newValue : this.min;
 			this.max = (this.max < newValue) ? newValue : this.max;
 			Integer prev = (counts.get(newValue) == null) ? 0 : counts.get(newValue);
@@ -70,11 +73,11 @@ public class PMF {
 	public void Adjust() {
 		while (this.prob.get(this.min) == 0.0) {
 			this.prob.remove(this.min);
-			this.min++;
+			this.min += binWidth;
 		}
 		while (this.prob.get(this.max) == 0.0) {
 			this.prob.remove(this.max);
-			this.max--;
+			this.max -= binWidth;
 		}
 	}
 	
@@ -83,7 +86,7 @@ public class PMF {
 		return (retVal != null) ? retVal : 0.0;
 	}
 	
-	public PMF Add(PMF other) {
+	/*public PMF Add(PMF other) {
 		PMF retPMF = new PMF(this.min + other.min, this.max + other.max);
 		for (int h = retPMF.min; h <= retPMF.max; h++) {
 			double sum = 0.0;
@@ -93,7 +96,7 @@ public class PMF {
 			retPMF.prob.put(h, sum);
 		}
 		return retPMF;
-	}
+	}*/
 	
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
@@ -104,35 +107,46 @@ public class PMF {
 
 	public PMF Interpolate(Double actualTime, Double alpha) {
 		Double betha = 1 - alpha;
-		int min = Util.RoundDouble((betha*this.min) + (alpha*actualTime));
-		int max = Util.RoundDouble((betha*this.max) + (alpha*actualTime));
+		int min = Util.RoundDouble((betha*this.min) + (alpha*actualTime), binWidth);
+		int max = Util.RoundDouble((betha*this.max) + (alpha*actualTime), binWidth);
 		HashMap<Integer, Double> probs = new HashMap<Integer, Double>();
-		for (int i = min; i <= max; ++i)
+		for (int i = min; i <= max; i+=binWidth)
 			probs.put(i, 0.0);
-		for (int i = this.min; i <= this.max; ++i) {
-			int newValue = Util.RoundDouble((betha*i)+(alpha*actualTime));
+		for (int i = this.min; i <= this.max; i += binWidth) {
+			int newValue = Util.RoundDouble((betha*i)+(alpha*actualTime), binWidth);
 			probs.put(newValue, probs.get(newValue)+this.Prob(i));
 		}
 		PMF retPMF = new PMF(min, max);
-		for (int i = min; i <= max; ++i) {
+		for (int i = min; i <= max; i += binWidth) {
 			retPMF.prob.put(i, probs.get(i));
 		}
 		return retPMF;
 	}
 	
 	public Double GetScore(Double actualTime) {
+		System.out.println("actualTime: " + Double.toString(actualTime));
 		Double cdf = 0.0;
 		Double score = 0.0;
-		for (int i = min; i < Util.RoundDouble(actualTime); ++i) {
+		int rounded = Util.RoundDouble(actualTime, binWidth);
+		for (int i = min; i < rounded && i <= max; ++i) {
 			cdf += Prob(i);
+			System.out.println("cdf: " + Double.toString(cdf));
 			score += Math.pow(cdf, 2);
+			System.out.println("score: " + Double.toString(score));
 		}
-		cdf += Prob(Util.RoundDouble(actualTime));
-		score += (actualTime - (Util.RoundDouble(actualTime) - 0.5)) * Math.pow(cdf, 2);
-		score += ((Util.RoundDouble(actualTime) + 0.5) - actualTime) * Math.pow(1-cdf, 2);
-		for (int i = Util.RoundDouble(actualTime) + 1; i <= this.max; ++i ) {
+		if (rounded <= max) {
+			cdf += Prob(rounded);
+			System.out.println("cdf: " + Double.toString(cdf));
+			score += (actualTime - (rounded - 0.5)) * Math.pow(cdf, 2);
+			System.out.println("score: " + Double.toString(score));
+			score += ((rounded + 0.5) - actualTime) * Math.pow(1-cdf, 2);
+			System.out.println("score: " + Double.toString(score));
+		}
+		for (int i = rounded + 1; i <= this.max; ++i ) {
 			cdf += Prob(i);
+			System.out.println("cdf: " + Double.toString(cdf));
 			score += Math.pow(1-cdf, 2);
+			System.out.println("score: " + Double.toString(score));
 		}
 		return score;
 	}

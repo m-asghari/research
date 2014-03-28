@@ -13,7 +13,7 @@ public class DataPreparation {
 	public static FileWriter fw;
 	public static BufferedWriter bw; 
 	
-	public static void GeneratePathSensorTable(String[] sensorList) throws SQLException {
+	private static void GeneratePathSensorTable(String[] sensorList) throws SQLException {
 		//Create a new table
 		String query = QueryTemplates.createPathSensors
 				.replace("##PATH_NUM##", Util.pathNumber);
@@ -58,7 +58,7 @@ public class DataPreparation {
 		}	
 	}
 
-	public static String GeneratePathEdgeTable(int size) throws SQLException{
+	private static String GeneratePathEdgeTable(int size) throws SQLException{
 		StringBuilder sb = new StringBuilder();
 		//Create a new table
 		String createQuery = QueryTemplates.createPathEdges
@@ -95,7 +95,7 @@ public class DataPreparation {
 		return sb.toString();
 	}
 	
-	public static void GeneratePathQueries(String[] sensorList) throws SQLException, IOException {
+	private static void GeneratePathQueries(String[] sensorList) throws SQLException, IOException {
 		//FileWriter fw = new FileWriter(String.format("Path%s_Queries.sql", Util.pathNumber));
 		//BufferedWriter bw = new BufferedWriter(fw);
 		
@@ -105,6 +105,19 @@ public class DataPreparation {
 		
 		//bw.close();
 		//fw.close();
+	}
+
+	@SuppressWarnings("unused")
+	private static void UpdateTravelTimes(int totalPaths, String operation) throws SQLException{
+		for (int pathNum = 0; pathNum < totalPaths; ++pathNum) {
+			Statement stm = Util.conn.createStatement();
+			//UPDATE PATH#_EDGE_PATTERNS SET TRAVEL_TIME = TRAVEL_TIME / 60
+			String query = QueryTemplates.updateTT
+					.replace("##PATH_NUM##", Integer.toString(pathNum))
+					.replace("##OPERATION##", operation);
+			stm.execute(query);
+			stm.close();
+		}
 	}
 
 	public static void main(String[] args) {
