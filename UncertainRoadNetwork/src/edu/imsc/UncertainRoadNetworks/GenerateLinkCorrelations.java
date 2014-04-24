@@ -1,5 +1,7 @@
 package edu.imsc.UncertainRoadNetworks;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -15,6 +17,26 @@ public class GenerateLinkCorrelations {
 	private static Pair<Integer, Integer> t2tPair = new Pair<Integer, Integer>(1, 1);
 
 	public static void main(String[] args) {
+		try {
+			FileReader fr = new FileReader("paths.txt");	
+			BufferedReader br = new BufferedReader(fr);
+			String link = br.readLine();
+			int pathN = 101;
+			while ((link = br.readLine()) != null) {
+				pathN++;
+				Util.path = link;
+				Util.pathNumber = Integer.toString(pathN);
+				GenerateForPath();
+			}
+			br.close();
+			fr.close();
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public static void GenerateForPath() {
 		String[] edges = Util.path.split("-");
 		try {
 			CreateTable();
@@ -54,7 +76,7 @@ public class GenerateLinkCorrelations {
 		HashMap<String, Double> retMap = new HashMap<String, Double>();
 		Double f2fCnt = 0.0, f2tCnt = 0.0, t2fCnt = 0.0, t2tCnt = 0.0, fCnt = 0.0, tCnt = 0.0;
 		for (Pair<Integer, Integer> pair : congChanges) {
-			if (pair.equals(f2fPair)) { 
+			if (pair.equals(f2fPair)) {
 				f2fCnt++;
 				fCnt++;
 			}

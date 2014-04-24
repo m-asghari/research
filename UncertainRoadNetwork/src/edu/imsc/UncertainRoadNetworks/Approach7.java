@@ -54,7 +54,7 @@ public class Approach7 {
 				}
 				newCongPMF.prob.put(b, sum);
 			}
-			congPMF = newCongPMF; 
+			congPMF = newCongPMF;
 			PMF newNormPMF = new PMF(prevMin + edgeNormPMFs.get(prevMin).min, prevMax + edgeNormPMFs.get(prevMax).max);
 			for (int b = newNormPMF.min; b <= newNormPMF.max; ++b) {
 				Double sum = 0.0;

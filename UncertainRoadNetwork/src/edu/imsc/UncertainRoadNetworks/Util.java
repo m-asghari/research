@@ -34,12 +34,14 @@ public class Util {
 	public static Double alpha = 0.5;
 	public static Double timeHorizon = 60.0;
 	
+	public static Double maxSpeed = 65.0;
+	
 	public static HashMap<Pair<String, String>, Double> pearsonCorrCoef;
 	public static HashMap<Pair<String, String>, ArrayList<Double>> congChangeProb;
 	public static final int f2f = 0;
 	public static final int f2t = 1;
 	public static final int t2f = 2;
-	public static final int t2t = 3; 
+	public static final int t2t = 3;
 	
 	public static DateFormat oracleDF = new SimpleDateFormat("dd-MMM-yy hh.mm.ss.SSS a");
 	public static DateFormat timeOfDayDF = new SimpleDateFormat("HH:mm:ss");
@@ -98,15 +100,23 @@ public class Util {
 	
 	public static ArrayList<Integer> FilterDays(ArrayList<Integer> days, String from, 
 			Calendar startTimeStamp) throws SQLException, ParseException{
+		Statement stm = conn.createStatement();
+		String query = QueryTemplates.edgeDistanceQuery
+				.replace("##PATH_NUM##", pathNumber)
+				.replace("##FROM##", from);
+		OracleResultSet ors = (OracleResultSet) stm.executeQuery(query);
+		Double baseTravelTime = 1.0;
+		if (ors.next()) baseTravelTime = (ors.getDouble(1)*3600)/maxSpeed;		
+		ors.close();
+		
 		String startTime = oracleDF.format(RoundTimeDown((Calendar)startTimeStamp.clone()).getTime()); 
 		String endTime = oracleDF.format(RoundTimeUp((Calendar)startTimeStamp.clone()).getTime());
-		Statement stm = conn.createStatement();
-		String query = QueryTemplates.singleTTQuery
+		query = QueryTemplates.singleTTQuery
 				.replace("##PATH_NUM##", pathNumber)
 				.replace("##FROM##", from)
 				.replace("##START_TIME##", startTime)
 				.replace("##END_TIME##", endTime);
-		OracleResultSet ors = (OracleResultSet) stm.executeQuery(query);
+		ors = (OracleResultSet) stm.executeQuery(query);
 		Double startTravelTime = 0.0;
 		if (ors.next()) startTravelTime = ors.getDouble(1);
 		else {
@@ -138,7 +148,7 @@ public class Util {
 					break;
 				}
 			if (days.get(daysIdx) == day)
-				if (Math.abs(travelTime - startTravelTime) <= similarityThreshold)
+				if (Math.abs(travelTime - startTravelTime) <= (similarityThreshold*baseTravelTime))
 					filteredDays.add(day);
 		}
 		ors.close();
@@ -324,7 +334,7 @@ public class Util {
 	}
 
 	public static int RoundDouble(double input, int base) {
-		int retValue = (int)input/base;
+		int retValue = ((int)input/base)*base;		
 		if (input % base > (double)base/2) retValue += base;
 		return retValue;
 	}

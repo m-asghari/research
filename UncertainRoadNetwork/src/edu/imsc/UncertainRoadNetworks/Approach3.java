@@ -12,11 +12,11 @@ public class Approach3 {
 	
 	public static NormalDist GenerateModel(String[] sensorList,
 			String timeOfDay, ArrayList<Integer> days) throws SQLException, ParseException {
-		// TODO Auto-generated method stub	
+		// TODO Auto-generated method stub		
 		return null;
 	}
 	
-	public static NormalDist GenerateActual(String[] sensorList,
+	/*public static NormalDist GenerateActual(String[] sensorList,
 			ArrayList<Calendar> startTimes) throws SQLException, ParseException {
 		ArrayList<Calendar> endTimes = SpeedUp.TimeDependentTravelTime(sensorList, startTimes);
 		ArrayList<Double> travelTimes = new ArrayList<Double>();
@@ -25,5 +25,5 @@ public class Approach3 {
 		}
 		NormalDist retDist = new NormalDist(travelTimes);
 		return retDist;
-	}	
+	}*/	
 }

@@ -40,12 +40,6 @@ public class Approach6 {
 					edgeNormPMF = edgeNormPMF.Interpolate(currTravelTime, Util.alpha);
 				}				
 			}
-			//bw.write(String.format("%s\n", sensorList[s]));
-			//bw.write(String.format("Transitions: %s\n", transitionProb.toString()));
-			//bw.write(String.format("congPMF: %s", congPMF.toString()));
-			//bw.write(String.format("normPMF: %s", normPMF.toString()));
-			//bw.write(String.format("edgeCongPMF: %s", edgeCongPMF.toString()));
-			//bw.write(String.format("edgeNormPMF: %s", edgeNormPMF.toString()));
 			int prevMin = Math.min(congPMF.min, normPMF.min);
 			int prevMax = Math.max(congPMF.max, normPMF.max);
 			PMF newCongPMF = new PMF(prevMin + edgeCongPMF.min, prevMax + edgeCongPMF.max);
@@ -67,10 +61,7 @@ public class Approach6 {
 				newCongPMF.prob.put(b, sum);
 			}
 			congPMF = newCongPMF;
-			normPMF = newNormPMF;
-			//bw.write(String.format("newCongPMF: %s", newCongPMF.toString()));
-			//bw.write(String.format("newNormPMF: %s\n", newNormPMF.toString()));
-			
+			normPMF = newNormPMF;			
 		}
 		bw.close();
 		fw.close();
@@ -82,5 +73,12 @@ public class Approach6 {
 		ArrayList<Double> travelTimes = SpeedUp.TimeInependentTravelTime(sensorList, startTimes);
 		PMF retPMF = new PMF(travelTimes);
 		return retPMF;
+	}
+	
+	public static Double GenerateActual(String[] sensorList,
+			Calendar startTime) throws SQLException, ParseException {
+		ArrayList<Calendar> temp = new ArrayList<Calendar>();
+		temp.add(startTime);
+		return SpeedUp.TimeInependentTravelTime(sensorList, temp).get(0);
 	}
 }

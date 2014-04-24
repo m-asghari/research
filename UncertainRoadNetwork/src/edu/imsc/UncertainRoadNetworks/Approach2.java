@@ -13,14 +13,14 @@ public class Approach2 {
 	
 	public static PMF GenerateModel(String[] sensorList, String timeOfDay, 
 			ArrayList<Integer> days, Calendar startTime) throws SQLException, ParseException{
-		//
+		
 		Calendar tod = Calendar.getInstance();
 		tod.setTime(Util.timeOfDayDF.parse(timeOfDay));
+		//tod.add(Calendar.MINUTE, futurePrediction);
 		
 		PMF retPMF = new PMF();
 		for (int s = 0; s < sensorList.length - 1; ++s) {
 			String from = sensorList[s];	
-			Util.Log("\n\nfrom: " + from);
 			PMF edgePMF = Util.getPMF(from, tod, days);
 			if (Util.predictionMethod == PredictionMethod.Interpolated) {
 				Double actualTime = Util.GetActualTravelTime(from, (Calendar)startTime.clone());
@@ -28,22 +28,14 @@ public class Approach2 {
 					edgePMF = edgePMF.Interpolate(actualTime, Util.alpha);
 			}
 			PMF newPMF = new PMF(retPMF.min + edgePMF.min, retPMF.max + edgePMF.max);
-			for (int b = newPMF.min; b <= newPMF.max; ++b) {
-				Util.Log("\nb: " + Integer.toString(b));
+			for (int b = newPMF.min; b <= newPMF.max; b+=PMF.binWidth) {
 				Double sum = 0.0;
-				for (int h = retPMF.min; h <= retPMF.max && h <= b; ++h) {
-					Util.Log("retPMF: " + retPMF.toString());
-					Util.Log("edgePMF: " + edgePMF.toString());
-					Util.Log("h(retPMF): " + Integer.toString(h));
-					Util.Log("b-h(edgePMF): " + Integer.toString(b-h));
+				for (int h = retPMF.min; h <= retPMF.max && h <= b; h+=PMF.binWidth) {
 					sum += retPMF.Prob(h) * edgePMF.Prob(b - h);
-					Util.Log(String.format("sum += %f * %f = %f", retPMF.Prob(h), edgePMF.Prob(b-h), sum));
 				}
 				newPMF.prob.put(b, sum);
-				Util.Log(String.format("newPMF(%d) = %f", b, sum));
 			}
 			newPMF.Adjust();
-			Util.Log(newPMF.toString());
 			retPMF = newPMF;
 		}
 		return retPMF;

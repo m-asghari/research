@@ -12,7 +12,7 @@ import oracle.jdbc.driver.OracleResultSet;
 public class DataPreparation {
 	public static FileWriter fw;
 	public static BufferedWriter bw; 
-	
+
 	private static void GeneratePathSensorTable(String[] sensorList) throws SQLException {
 		//Create a new table
 		String query = QueryTemplates.createPathSensors
@@ -95,9 +95,12 @@ public class DataPreparation {
 		return sb.toString();
 	}
 	
+	@SuppressWarnings("unused")
 	private static void GeneratePathQueries(String[] sensorList) throws SQLException, IOException {
+		//FileWriter fw = new FileWriter(String.format("Path%s_Queries.sql", Util.pathNumber));
+		//BufferedWriter bw = new BufferedWriter(fw);
 		
-		GeneratePathSensorTable(sensorList);
+		//GeneratePathSensorTable(sensorList);
 		bw.write(GeneratePathEdgeTable(sensorList.length));
 		bw.write(QueryTemplates.pathPatterns.replace("##PATH_NUM##", Util.pathNumber));
 		
@@ -105,9 +108,8 @@ public class DataPreparation {
 		//fw.close();
 	}
 
-	@SuppressWarnings("unused")
 	private static void UpdateTravelTimes(int totalPaths, String operation) throws SQLException{
-		for (int pathNum = 0; pathNum < totalPaths; ++pathNum) {
+		for (int pathNum = 1; pathNum <= totalPaths; ++pathNum) {
 			Statement stm = Util.conn.createStatement();
 			//UPDATE PATH#_EDGE_PATTERNS SET TRAVEL_TIME = TRAVEL_TIME / 60
 			String query = QueryTemplates.updateTT
@@ -122,10 +124,10 @@ public class DataPreparation {
 		try {
 			fw = new FileWriter("linkQueries.sql");
 			bw = new BufferedWriter(fw);
-			FileReader fr = new FileReader("links.txt");
+			FileReader fr = new FileReader("paths.txt");
 			BufferedReader br = new BufferedReader(fr);
 			String link = "";
-			int pathN = 0;
+			int pathN = 100;
 			while ((link = br.readLine()) != null) {
 				pathN++;
 				Util.pathNumber = Integer.toString(pathN);
@@ -137,6 +139,8 @@ public class DataPreparation {
 			fr.close();
 			bw.close();
 			fw.close();
+			//UpdateTravelTimes(52, "*");
+			
 		}
 		catch (Exception e) {
 			e.printStackTrace();

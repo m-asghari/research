@@ -21,7 +21,7 @@ public class GenerateKMLFile {
 			"\t\t</Style>\n" +
 				"##PLACEMARKS##\n" +
 			"\t</Document>\n" +
-			"</kml>"; 
+			"</kml>";
 		
 		private static String placeMarkTmplate =
 			"\t\t<Placemark>\n" +

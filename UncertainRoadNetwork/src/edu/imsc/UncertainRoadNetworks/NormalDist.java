@@ -36,7 +36,7 @@ public class NormalDist {
 		Util.Log(String.format("Sum: %f, Size: %d, Var: %f", sum, inputs.size(), this.var));
 		if (inputs.size() == 0) {
 			this.mean = 0;
-			this.var = 0; 
+			this.var = 0;
 		}
 	}
 	
@@ -53,10 +53,16 @@ public class NormalDist {
 	}
 	
 	public Double GetScore(Double actualTime) {
+		if (this.var == 0) {
+			return Math.abs(this.mean - actualTime);
+		}
 		Double std = Math.sqrt(this.var);
 		Double v = (actualTime - this.mean)/std;
 		NormalDistribution normDist = new NormalDistribution(0, 1);
-		return -std * (1.0/Math.sqrt(Math.PI) - 2*normDist.density(v) - v*(2*normDist.cumulativeProbability(v) - 1));
+		Double score = -std * (1.0/Math.sqrt(Math.PI) - 2*normDist.density(v) - v*(2*normDist.cumulativeProbability(v) - 1));
+		if (score == Double.NaN)
+			System.out.println("busted");
+		return score;
 	}
 
 }

@@ -15,7 +15,6 @@ public class Approach1 {
 			ArrayList<Integer> days, Calendar startTime) throws SQLException, ParseException{
 		Calendar tod = Calendar.getInstance();
 		tod.setTime(Util.timeOfDayDF.parse(timeOfDay));
-		//
 		
 		NormalDist retDist = new NormalDist(0, 0);
 		for (int s = 0; s < sensorList.length - 1; ++s) {

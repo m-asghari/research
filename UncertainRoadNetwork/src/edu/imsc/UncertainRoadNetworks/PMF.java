@@ -5,7 +5,7 @@ import java.util.Map.Entry;
 
 
 public class PMF {
-	private static int binWidth = 15;
+	public static int binWidth = 5;
 	
 	public int min;
 	public int max;
@@ -18,7 +18,7 @@ public class PMF {
 		this.prob.put(0, 1.0);		
 	}
 	
-	public PMF(int min, int max) { 
+	public PMF(int min, int max) {
 		this.min = min;
 		this.max = max;
 		this.prob = new HashMap<Integer, Double>();
@@ -123,30 +123,39 @@ public class PMF {
 		return retPMF;
 	}
 	
+	/*public Double GetScore(Double actualTime) {
+		HashMap<Integer, Double> cdf = new HashMap<Integer, Double>();
+		Double sum = 0.0;
+		for (int i = this.min; i <=this.max; i += binWidth) {
+			sum += Prob(i);
+			cdf.put(i, sum);
+		}
+		Double score = 0.0;
+		for (int i = this.min; i <= this.max; i += binWidth) {
+			if (i < actualTime)
+				score += binWidth * Math.pow(cdf.get(i), 2);
+			else
+				score += binWidth * Math.pow((1-cdf.get(i)), 2);
+		}
+		return score;
+	}*/
+	
 	public Double GetScore(Double actualTime) {
-		System.out.println("actualTime: " + Double.toString(actualTime));
 		Double cdf = 0.0;
 		Double score = 0.0;
 		int rounded = Util.RoundDouble(actualTime, binWidth);
-		for (int i = min; i < rounded && i <= max; ++i) {
+		for (int i = min; i < rounded && i <= max; i += binWidth) {
 			cdf += Prob(i);
-			System.out.println("cdf: " + Double.toString(cdf));
-			score += Math.pow(cdf, 2);
-			System.out.println("score: " + Double.toString(score));
+			score += Math.pow(cdf, 2)*binWidth;
 		}
 		if (rounded <= max) {
 			cdf += Prob(rounded);
-			System.out.println("cdf: " + Double.toString(cdf));
-			score += (actualTime - (rounded - 0.5)) * Math.pow(cdf, 2);
-			System.out.println("score: " + Double.toString(score));
-			score += ((rounded + 0.5) - actualTime) * Math.pow(1-cdf, 2);
-			System.out.println("score: " + Double.toString(score));
+			score += (actualTime - (rounded - ((double)binWidth/2))) * Math.pow(cdf, 2);
+			score += ((rounded + ((double)binWidth/2)) - actualTime) * Math.pow(1-cdf, 2);
 		}
-		for (int i = rounded + 1; i <= this.max; ++i ) {
+		for (int i = rounded + 1; i <= this.max; i += binWidth ) {
 			cdf += Prob(i);
-			System.out.println("cdf: " + Double.toString(cdf));
-			score += Math.pow(1-cdf, 2);
-			System.out.println("score: " + Double.toString(score));
+			score += Math.pow(1-cdf, 2)*binWidth;
 		}
 		return score;
 	}

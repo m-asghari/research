@@ -8,8 +8,6 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
-import com.sun.corba.se.spi.orbutil.fsm.Guard.Result;
-
 import edu.imsc.UncertainRoadNetworks.Util.PredictionMethod;
 
 public class Main {
@@ -28,18 +26,39 @@ public class Main {
 			int pathN = 0;
 			while ((link = br.readLine()) != null) {
 				pathN++;
-				if (pathN == 7)
-					System.out.println("hello");
 				Util.path = link;
 				Util.pathNumber = Integer.toString(pathN);
+				//Util.Initialize();
 				results.put(Util.path, new ArrayList<Double>());
-				int[] startHours = new int[] {8, 11, 14, 17, 20};
+				/*int[] startHours = new int[] {8, 11, 14, 17, 20};
 				for (int startHour : startHours) {
-					double[] simThresholds = new double[] {0.2, 0.6, 1.0};
+					RunExperiment(startHour, 0);
+					System.out.println(String.format("Finished Path%d at startHour %d" , pathN, startHour));
+				}*/
+				/*int[] startHours = new int[] {8, 11, 14, 17, 20};
+				int[] predictionTimes = new int[] {0};
+				double[] simThresholds = new double[] {0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 1};
+				//int[] startHours = new int[] {8, 17};
+				for (int predictionTime : predictionTimes) {
 					for (double similarity : simThresholds) {
-						Util.similarityThreshold = similarity;
-						RunExperiment(startHour);
-						System.out.println(String.format("Finished Path%d at startHour %d for similarity %f with score %f", pathN, startHour, similarity, results.get(link).get(results.get(link).size()-1)));
+						for (int startHour : startHours) {
+							Util.similarityThreshold = similarity;
+							RunExperiment(startHour, predictionTime);
+							System.out.println(String.format("Finished Path%d at startHour %d with threshold %f and predictionTime %d" , pathN, startHour, similarity, predictionTime));
+						}
+					}
+				}*/
+				int[] startHours = new int[] {8, 11, 14, 17, 20};
+				int[] timeHorizons = new int[] {10, 15, 20, 25, 30};
+				int[] predictionTimes = new int[] {0, 5, 10, 15, 20};
+				for (int predictionTime : predictionTimes) {
+					for (int timeHorizon : timeHorizons) {
+						for (int startHour : startHours) {
+							Util.alpha = 1 - ((double)predictionTime/timeHorizon);
+							if (Util.alpha < 0.0) Util.alpha = 0.0;
+							RunExperiment(startHour, predictionTime);
+							System.out.println(String.format("Finished Path%d at startHour %d with timeHorizof %d and predictionTime %d" , pathN, startHour, timeHorizon, predictionTime));
+						}
 					}
 				}
 				WriteResultsToFile(results);
@@ -54,7 +73,7 @@ public class Main {
 	
 	public static void WriteResultsToFile(HashMap<String, ArrayList<Double>> results){
 		try {
-			FileWriter fw = new FileWriter("results_links_similarPattern_continuous2.csv");
+			FileWriter fw = new FileWriter("results_links_Interpolate_discrete3.csv");
 			BufferedWriter bw = new BufferedWriter(fw);
 			for (Entry<String, ArrayList<Double>> e : results.entrySet()) {
 				bw.write(e.getKey()+",");
@@ -72,7 +91,7 @@ public class Main {
 		
 	}
 	
-	public static void RunExperiment(int startHour) {
+	public static void RunExperiment(int startHour, int predictionTime) {
 		//Util.Initialize();
 		String[] sensorList = Util.path.split("-");
 		try {
@@ -88,7 +107,7 @@ public class Main {
 			String timeOfDay = Util.timeOfDayDF.format(initialStartTime.getTime());
 			StartTimeGenerator stg = new StartTimeGenerator(initialStartTime, k);
 			ArrayList<ArrayList<Calendar>> allStartTimes = stg.GetStartTimes();
-			PredictionMethod[] values = new PredictionMethod[] {PredictionMethod.Filtered};
+			PredictionMethod[] values = new PredictionMethod[] {PredictionMethod.Interpolated};
 			for (PredictionMethod predictionMethod : values ) {
 				Util.predictionMethod = predictionMethod;
 				//FileWriter fw = new FileWriter(String.format("Approach1_%s.txt", predictionMethod.toString()));
@@ -101,18 +120,18 @@ public class Main {
 					ArrayList<Integer> modelDays = new ArrayList<Integer>();
 					for (int j = 0; j < allStartTimes.get(0).size(); ++j) {
 						for (int l = 0; l < k; ++l) {
-							if (j != i)
+							if (l != i)
 								if (j < allStartTimes.get(l).size())
 									modelDays.add(allStartTimes.get(l).get(j).get(Calendar.DAY_OF_YEAR));
 						}
 					}
-					NormalDist modelDist;
+					PMF modelDist;
 					Double actualTime;
 					switch (Util.predictionMethod) {
 					case Historic:
-						modelDist = Approach1.GenerateModel(sensorList, timeOfDay, modelDays, null);
+						modelDist = Approach2.GenerateModel(sensorList, timeOfDay, modelDays, null);
 						for (Calendar startTime : testDays) {
-							actualTime = Approach1.GenerateActual(sensorList, (Calendar)startTime.clone());
+							actualTime = Approach2.GenerateActual(sensorList, (Calendar)startTime.clone());
 							Double score = modelDist.GetScore(actualTime);
 							totalScore += score;
 							totalCount++;
@@ -123,12 +142,17 @@ public class Main {
 						break;
 					case Filtered:
 						for (Calendar startTime : testDays) {
+							Calendar predictionCal = Calendar.getInstance();
+							//predictionCal.setTime(Util.timeOfDayDF.parse(timeOfDay));
+							predictionCal.setTime(startTime.getTime());
+							predictionCal.add(Calendar.MINUTE, predictionTime);
+							String predictionTOD = Util.timeOfDayDF.format(predictionCal.getTime());
 							ArrayList<Integer> filteredDays = Util.FilterDays(modelDays, sensorList[0], (Calendar)startTime.clone());
 							if (filteredDays.size() > 0)
-								modelDist = Approach1.GenerateModel(sensorList, timeOfDay, filteredDays, null);
+								modelDist = Approach2.GenerateModel(sensorList, predictionTOD, filteredDays, null);
 							else
-								modelDist = Approach1.GenerateModel(sensorList, timeOfDay, modelDays, null);
-							actualTime = Approach1.GenerateActual(sensorList, (Calendar)startTime.clone());
+								modelDist = Approach2.GenerateModel(sensorList, predictionTOD, modelDays, null);
+							actualTime = Approach2.GenerateActual(sensorList, (Calendar)predictionCal.clone());
 							Double score = modelDist.GetScore(actualTime);
 							totalScore += score;
 							totalCount++;
@@ -136,10 +160,18 @@ public class Main {
 							//bw.write(Approach1.GetResults((Calendar)startTime.clone(), actualTime, score));
 							//bw.write("\n");
 						}
+						break;
 					case Interpolated:
 						for (Calendar startTime : testDays) {
-							modelDist = Approach1.GenerateModel(sensorList, timeOfDay, modelDays, (Calendar)startTime.clone());
-							actualTime = Approach1.GenerateActual(sensorList, (Calendar)startTime.clone());
+							Calendar predictionCal = Calendar.getInstance();
+							//predictionCal.setTime(Util.timeOfDayDF.parse(timeOfDay));
+							predictionCal.setTime(startTime.getTime());
+							predictionCal.add(Calendar.MINUTE, predictionTime);
+							String predictionTOD = Util.timeOfDayDF.format(predictionCal.getTime());
+							String temp = Util.oracleDF.format(startTime.getTime());
+							String temp2 = Util.oracleDF.format(predictionCal.getTime());
+							modelDist = Approach2.GenerateModel(sensorList, predictionTOD, modelDays, (Calendar)startTime.clone());
+							actualTime = Approach2.GenerateActual(sensorList, (Calendar)predictionCal.clone());
 							Double score = modelDist.GetScore(actualTime);
 							totalScore += score;
 							totalCount++;
@@ -147,10 +179,15 @@ public class Main {
 							//bw.write(Approach1.GetResults((Calendar)startTime.clone(), actualTime, score));
 							//bw.write("\n");
 						}
+						break;
 					default:
 						break;
 					}
 				}
+				//System.out.println(String.format("\n\nTotal Score for Approach1 %s: %f\n\n", predictionMethod, totalScore/totalCount));
+				//bw.write(String.format("\n\nTotal Score for Approach1 %s: %f\n\n", predictionMethod, totalScore/totalCount));
+				//bw.close();
+				//fw.close();
 				results.get(Util.path).add(totalScore/totalCount);
 			}
 					}

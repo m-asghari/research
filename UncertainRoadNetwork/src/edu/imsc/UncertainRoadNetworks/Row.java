@@ -6,6 +6,6 @@ public class Row {
 	public Row(){}
 	public Row(String Time, Double Speed) {
 		this.Time = Time;
-		this.Speed = Speed; 
+		this.Speed = Speed;
 	}
 }

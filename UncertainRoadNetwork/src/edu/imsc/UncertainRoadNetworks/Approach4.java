@@ -17,13 +17,16 @@ public class Approach4 {
 			ArrayList<Integer> days, Calendar startTime) throws SQLException, ParseException {
 		
 		PMF retPMF = new PMF();
-		for (int s = 0; s < sensorList.length - 1; ++s) { 
+		for (int s = 0; s < sensorList.length - 1; ++s) {
 			String from = sensorList[s];
-			Double currTravelTime = Util.GetActualTravelTime(from, (Calendar)startTime.clone());
+			Double currTravelTime = 0.0;
+			if (Util.predictionMethod == PredictionMethod.Interpolated) {
+				currTravelTime = Util.GetActualTravelTime(from, (Calendar)startTime.clone());
+			}
 			int min = retPMF.min;
 			int max = retPMF.max;
 			HashMap<Integer, PMF> edgePMFs = new HashMap<Integer, PMF>();
-			for (int i = min; i <= max; i++) {
+			for (int i = min; i <= max; i+=PMF.binWidth) {
 				Calendar time = Calendar.getInstance();
 				time.setTime(Util.timeOfDayDF.parse(timeOfDay));
 				time.add(Calendar.MINUTE, i);
@@ -35,9 +38,9 @@ public class Approach4 {
 				edgePMFs.put(i, edgePMF);
 			}
 			PMF newPMF = new PMF(retPMF.min + edgePMFs.get(min).min, retPMF.max + edgePMFs.get(max).max);
-			for (int b = newPMF.min; b <= newPMF.max; ++b) {
+			for (int b = newPMF.min; b <= newPMF.max; b+=PMF.binWidth) {
 				Double sum = 0.0;
-				for (int h = retPMF.min; h <= retPMF.max; ++h) {
+				for (int h = retPMF.min; h <= retPMF.max && h <= b; h+=PMF.binWidth) {
 					sum += retPMF.Prob(h) * edgePMFs.get(h).Prob(b - h);
 				}
 				newPMF.prob.put(b, sum);
@@ -50,13 +53,16 @@ public class Approach4 {
 	
 	public static PMF GenerateActual(String[] sensorList,
 			ArrayList<Calendar> startTimes) throws SQLException, ParseException {
-		ArrayList<Calendar> endTimes = SpeedUp.TimeDependentTravelTime(sensorList, startTimes);
-		ArrayList<Double> travelTimes = new ArrayList<Double>();
-		for (int i = 0; i < startTimes.size(); ++i) {
-			travelTimes.add(SpeedUp.ToMinutes(startTimes.get(i), endTimes.get(i)));			
-		}
+		ArrayList<Double> travelTimes = SpeedUp.TimeDependentTravelTime(sensorList, startTimes);
 		PMF retPMF = new PMF(travelTimes);
 		return retPMF;
+	}
+	
+	public static Double GenerateActual(String[] sensorList,
+			Calendar startTime) throws SQLException, ParseException {
+		ArrayList<Calendar> temp = new ArrayList<Calendar>();
+		temp.add((Calendar)startTime.clone());
+		return SpeedUp.TimeDependentTravelTime(sensorList, temp).get(0);
 	}
 	
 	

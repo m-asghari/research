@@ -19,7 +19,7 @@ public class QueryTemplates {
 				sb.append(line);
 				sb.append("\n");
 			}
-			query = sb.toString(); 
+			query = sb.toString();
 			br.close();
 			fr.close();
 		}
@@ -36,9 +36,9 @@ public class QueryTemplates {
 	public static String singleTTQuery = readQuery("QueryTemplates\\singleTTQuery.sql");
 	public static String congQuery = readQuery("QueryTemplates\\congQuery.sql");
 	public static String pearsonQuery = readQuery("QueryTemplates\\PearsonQuery.sql");
+	public static String edgeDistanceQuery = readQuery("QueryTemplates\\SelectEdgeDistance.sql");
 	
 	//SpeedUp.java
-	public static String edgeDistanceQuery = readQuery("QueryTemplates\\SelectEdgeDistance.sql");
 	public static String sensorSpeedsQuery = readQuery("QueryTemplates\\SelectSensorSpeeds.sql");
 	public static String sensorAvgSpeedQuery = readQuery("QueryTemplates\\SelectSensorAvgSpeed.sql");
 	public static String timeInDepTravelTime = readQuery("QueryTemplates\\SelectTimeIndepTT.sql");
@@ -54,7 +54,7 @@ public class QueryTemplates {
 	public static String selectEdgeInfo = readQuery("QueryTemplates\\DataPreparation\\SelectEdgeInfo.sql");
 	public static String insertEdgeInfo = readQuery("QueryTemplates\\DataPreparation\\InsertEdgeInfo.sql");
 	public static String pathPatterns = readQuery("QueryTemplates\\DataPreparation\\PathPatterns.sql");
-	public static String updateTT = readQuery("QueryTemnplates\\DataPreparation\\UpdateTravelTimes.sql");
+	public static String updateTT = readQuery("QueryTemplates\\DataPreparation\\UpdateTravelTimes.sql");
 	
 	//GenerateLinkCorrelations.java
 	public static String createLinkCorr = readQuery("QueryTemplates\\LinkCorrelations\\CreateTable.sql");

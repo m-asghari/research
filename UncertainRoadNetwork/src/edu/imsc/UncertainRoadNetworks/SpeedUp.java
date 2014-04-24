@@ -35,7 +35,7 @@ public class SpeedUp {
 	public static void main(String[] args) {
 
 		try {
-			gfw = new FileWriter("logs.txt"); 
+			gfw = new FileWriter("logs.txt");
 			gbw = new BufferedWriter(gfw);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -47,6 +47,9 @@ public class SpeedUp {
 		Calendar endYearCal = Calendar.getInstance();
 		Calendar cal = Calendar.getInstance();
 		try {
+			// FileWriter fw = new FileWriter(String.format("fri_path%d.csv",
+			// pathNumber));
+			// BufferedWriter bw = new BufferedWriter(fw);
 			endYearCal.setTime(defaultDF.parse(endTime));
 			// endYearCal.setTime(defaultDF.parse("2013-01-09 00:00:00.0"));
 			cal.setTime(defaultDF.parse(startTime));
@@ -234,6 +237,8 @@ public class SpeedUp {
 			while (avgOrs.next()) {
 				avgTravelTimes = avgOrs.getDouble(1);
 			}
+			avgOrs.close();
+			avgStm.close();
 
 			// select Time, TravelTime from Path#_Edge_Patterns where time >=
 			// start_time and time < end_time and from = from and to = to order
@@ -258,6 +263,8 @@ public class SpeedUp {
 				Double tt = ors.getDouble(2);
 				travelTimes.add(new Pair<Calendar, Double>(time, tt));
 			}
+			ors.close();
+			stm.close();
 			travelTimes.add(new Pair<Calendar, Double>(ubTime, avgTravelTimes));
 
 			int p = 0;
@@ -273,17 +280,17 @@ public class SpeedUp {
 		return currentTimes;
 	}
 
-	public static ArrayList<Calendar> TimeDependentTravelTime(
+	public static ArrayList<Double> TimeDependentTravelTime(
 			String[] sensorList, ArrayList<Calendar> startTimes)
 			throws SQLException, ParseException {
-		ArrayList<Calendar> endTimes = new ArrayList<Calendar>();
+		ArrayList<Double> retTimes = new ArrayList<Double>();
 		for (Calendar startTime : startTimes) {
 			ArrayList<Calendar> temp = new ArrayList<Calendar>();
 			temp.add((Calendar) startTime.clone());
-			endTimes.add(SingleDayTimeDependantTravelTime(sensorList, temp)
-					.get(0));
+			Calendar endTime = SingleDayTimeDependantTravelTime(sensorList, temp).get(0);
+			retTimes.add(ToMinutes((Calendar)startTime.clone(), endTime));
 		}
-		return endTimes;
+		return retTimes;
 	}
 
 	public static ArrayList<Calendar> TravelTime(String[] sensorList,
