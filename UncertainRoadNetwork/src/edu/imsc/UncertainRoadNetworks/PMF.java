@@ -18,7 +18,7 @@ public class PMF {
 		this.prob.put(0, 1.0);		
 	}
 	
-	public PMF(int min, int max) {
+	public PMF(int min, int max) { 
 		this.min = min;
 		this.max = max;
 		this.prob = new HashMap<Integer, Double>();

@@ -20,9 +20,8 @@ public class Approach5 {
 		
 		HashMap<String, ArrayList<Double>> allTravelTimes = new HashMap<String, ArrayList<Double>>();
 		 
-		for (int s = 0; s < sensorList.length - 1; ++s) {
+		for (int s = 0; s < sensorList.length - 1; ++s) { 
 			String from = sensorList[s];
-			//ArrayList<Double> travelTimes = Util.getTravelTimes(pathNumber, from, tod, days);
 			allTravelTimes.put(from, Util.getTravelTimes(from, tod, days));
 		}
 		

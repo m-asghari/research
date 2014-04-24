@@ -17,7 +17,7 @@ public class Approach4 {
 			ArrayList<Integer> days, Calendar startTime) throws SQLException, ParseException {
 		
 		PMF retPMF = new PMF();
-		for (int s = 0; s < sensorList.length - 1; ++s) {
+		for (int s = 0; s < sensorList.length - 1; ++s) { 
 			String from = sensorList[s];
 			Double currTravelTime = Util.GetActualTravelTime(from, (Calendar)startTime.clone());
 			int min = retPMF.min;

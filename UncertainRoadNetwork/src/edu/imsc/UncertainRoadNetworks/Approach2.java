@@ -13,7 +13,7 @@ public class Approach2 {
 	
 	public static PMF GenerateModel(String[] sensorList, String timeOfDay, 
 			ArrayList<Integer> days, Calendar startTime) throws SQLException, ParseException{
-		
+		//
 		Calendar tod = Calendar.getInstance();
 		tod.setTime(Util.timeOfDayDF.parse(timeOfDay));
 		

@@ -54,7 +54,7 @@ public class GenerateLinkCorrelations {
 		HashMap<String, Double> retMap = new HashMap<String, Double>();
 		Double f2fCnt = 0.0, f2tCnt = 0.0, t2fCnt = 0.0, t2tCnt = 0.0, fCnt = 0.0, tCnt = 0.0;
 		for (Pair<Integer, Integer> pair : congChanges) {
-			if (pair.equals(f2fPair)) {
+			if (pair.equals(f2fPair)) { 
 				f2fCnt++;
 				fCnt++;
 			}

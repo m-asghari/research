@@ -35,7 +35,7 @@ public class SpeedUp {
 	public static void main(String[] args) {
 
 		try {
-			gfw = new FileWriter("logs.txt");
+			gfw = new FileWriter("logs.txt"); 
 			gbw = new BufferedWriter(gfw);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -47,9 +47,6 @@ public class SpeedUp {
 		Calendar endYearCal = Calendar.getInstance();
 		Calendar cal = Calendar.getInstance();
 		try {
-			// FileWriter fw = new FileWriter(String.format("fri_path%d.csv",
-			// pathNumber));
-			// BufferedWriter bw = new BufferedWriter(fw);
 			endYearCal.setTime(defaultDF.parse(endTime));
 			// endYearCal.setTime(defaultDF.parse("2013-01-09 00:00:00.0"));
 			cal.setTime(defaultDF.parse(startTime));

@@ -19,7 +19,7 @@ public class QueryTemplates {
 				sb.append(line);
 				sb.append("\n");
 			}
-			query = sb.toString();
+			query = sb.toString(); 
 			br.close();
 			fr.close();
 		}

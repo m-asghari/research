@@ -12,7 +12,7 @@ public class Approach3 {
 	
 	public static NormalDist GenerateModel(String[] sensorList,
 			String timeOfDay, ArrayList<Integer> days) throws SQLException, ParseException {
-		// TODO Auto-generated method stub		
+		// TODO Auto-generated method stub	
 		return null;
 	}
 	

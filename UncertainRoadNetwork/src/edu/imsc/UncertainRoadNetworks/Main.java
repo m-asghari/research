@@ -151,10 +151,6 @@ public class Main {
 						break;
 					}
 				}
-				//System.out.println(String.format("\n\nTotal Score for Approach1 %s: %f\n\n", predictionMethod, totalScore/totalCount));
-				//bw.write(String.format("\n\nTotal Score for Approach1 %s: %f\n\n", predictionMethod, totalScore/totalCount));
-				//bw.close();
-				//fw.close();
 				results.get(Util.path).add(totalScore/totalCount);
 			}
 					}

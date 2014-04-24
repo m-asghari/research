@@ -25,11 +25,8 @@ public class Approach6 {
 		FileWriter fw = new FileWriter("logs.txt");
 		BufferedWriter bw = new BufferedWriter(fw);	
 		
-		//bw.write(String.format("%s\n", sensorList[0]));
 		PMF congPMF = Util.getPMF(sensorList[0], tod, days, true);
-		//bw.write(String.format("congPMF: %s", congPMF.toString()));
 		PMF normPMF = Util.getPMF(sensorList[0], tod, days, false);
-		//bw.write(String.format("normPMF: %s", normPMF.toString()));
 		for (int s = 1; s < sensorList.length - 1; ++s) {
 			String prev = sensorList[s-1];
 			String from = sensorList[s];

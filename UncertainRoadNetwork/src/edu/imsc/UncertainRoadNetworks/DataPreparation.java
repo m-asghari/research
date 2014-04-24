@@ -96,8 +96,6 @@ public class DataPreparation {
 	}
 	
 	private static void GeneratePathQueries(String[] sensorList) throws SQLException, IOException {
-		//FileWriter fw = new FileWriter(String.format("Path%s_Queries.sql", Util.pathNumber));
-		//BufferedWriter bw = new BufferedWriter(fw);
 		
 		GeneratePathSensorTable(sensorList);
 		bw.write(GeneratePathEdgeTable(sensorList.length));

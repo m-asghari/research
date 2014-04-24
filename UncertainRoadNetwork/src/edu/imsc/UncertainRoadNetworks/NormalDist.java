@@ -36,7 +36,7 @@ public class NormalDist {
 		Util.Log(String.format("Sum: %f, Size: %d, Var: %f", sum, inputs.size(), this.var));
 		if (inputs.size() == 0) {
 			this.mean = 0;
-			this.var = 0;
+			this.var = 0; 
 		}
 	}
 	

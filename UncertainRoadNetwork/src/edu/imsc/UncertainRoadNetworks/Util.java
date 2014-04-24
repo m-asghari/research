@@ -39,7 +39,7 @@ public class Util {
 	public static final int f2f = 0;
 	public static final int f2t = 1;
 	public static final int t2f = 2;
-	public static final int t2t = 3;
+	public static final int t2t = 3; 
 	
 	public static DateFormat oracleDF = new SimpleDateFormat("dd-MMM-yy hh.mm.ss.SSS a");
 	public static DateFormat timeOfDayDF = new SimpleDateFormat("HH:mm:ss");
