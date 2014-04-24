@@ -30,11 +30,14 @@ public class Main {
 				Util.pathNumber = Integer.toString(pathN);
 				//Util.Initialize();
 				results.put(Util.path, new ArrayList<Double>());
-				/*int[] startHours = new int[] {8, 11, 14, 17, 20};
-				for (int startHour : startHours) {
-					RunExperiment(startHour, 0);
-					System.out.println(String.format("Finished Path%d at startHour %d" , pathN, startHour));
-				}*/
+				int[] startHours = new int[] {8, 11, 14, 17, 20};
+				int[] predictionTimes = new int [] {0, 5, 10, 15, 20};
+				for (int predictionTime : predictionTimes) {
+					for (int startHour : startHours) {
+						RunExperiment(startHour, PredictionMethod.Historic, predictionTime);
+						System.out.println(String.format("Finished Path%d at startHour %d prediction time %d" , pathN, startHour, predictionTime));
+					}
+				}
 				/*int[] startHours = new int[] {8, 11, 14, 17, 20};
 				int[] predictionTimes = new int[] {0};
 				double[] simThresholds = new double[] {0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 1};
@@ -48,7 +51,7 @@ public class Main {
 						}
 					}
 				}*/
-				int[] startHours = new int[] {8, 11, 14, 17, 20};
+				/*int[] startHours = new int[] {8, 11, 14, 17, 20};
 				int[] timeHorizons = new int[] {10, 15, 20, 25, 30};
 				int[] predictionTimes = new int[] {0, 5, 10, 15, 20};
 				for (int predictionTime : predictionTimes) {
@@ -60,7 +63,7 @@ public class Main {
 							System.out.println(String.format("Finished Path%d at startHour %d with timeHorizof %d and predictionTime %d" , pathN, startHour, timeHorizon, predictionTime));
 						}
 					}
-				}
+				}*/
 				WriteResultsToFile(results);
 			}
 			br.close();
@@ -73,7 +76,7 @@ public class Main {
 	
 	public static void WriteResultsToFile(HashMap<String, ArrayList<Double>> results){
 		try {
-			FileWriter fw = new FileWriter("results_links_Interpolate_discrete3.csv");
+			FileWriter fw = new FileWriter("results_links_Historic_discrete.csv");
 			BufferedWriter bw = new BufferedWriter(fw);
 			for (Entry<String, ArrayList<Double>> e : results.entrySet()) {
 				bw.write(e.getKey()+",");
@@ -91,7 +94,7 @@ public class Main {
 		
 	}
 	
-	public static void RunExperiment(int startHour, int predictionTime) {
+	public static void RunExperiment(int startHour, Util.PredictionMethod predMethod, int predictionTime) {
 		//Util.Initialize();
 		String[] sensorList = Util.path.split("-");
 		try {
@@ -107,7 +110,7 @@ public class Main {
 			String timeOfDay = Util.timeOfDayDF.format(initialStartTime.getTime());
 			StartTimeGenerator stg = new StartTimeGenerator(initialStartTime, k);
 			ArrayList<ArrayList<Calendar>> allStartTimes = stg.GetStartTimes();
-			PredictionMethod[] values = new PredictionMethod[] {PredictionMethod.Interpolated};
+			PredictionMethod[] values = new PredictionMethod[] {predMethod};
 			for (PredictionMethod predictionMethod : values ) {
 				Util.predictionMethod = predictionMethod;
 				//FileWriter fw = new FileWriter(String.format("Approach1_%s.txt", predictionMethod.toString()));
@@ -129,9 +132,16 @@ public class Main {
 					Double actualTime;
 					switch (Util.predictionMethod) {
 					case Historic:
-						modelDist = Approach2.GenerateModel(sensorList, timeOfDay, modelDays, null);
+						Calendar todCal = Calendar.getInstance();
+						todCal.setTime(Util.timeOfDayDF.parse(timeOfDay));
+						todCal.add(Calendar.MINUTE, predictionTime);
+						String todStr = Util.timeOfDayDF.format(todCal.getTime());
+						modelDist = Approach2.GenerateModel(sensorList, todStr, modelDays, null);
 						for (Calendar startTime : testDays) {
-							actualTime = Approach2.GenerateActual(sensorList, (Calendar)startTime.clone());
+							Calendar predictionCal = Calendar.getInstance();
+							predictionCal.setTime(startTime.getTime());
+							predictionCal.add(Calendar.MINUTE, predictionTime);
+							actualTime = Approach2.GenerateActual(sensorList, (Calendar)predictionCal.clone());
 							Double score = modelDist.GetScore(actualTime);
 							totalScore += score;
 							totalCount++;
