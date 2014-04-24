@@ -30,27 +30,27 @@ public class Main {
 				Util.pathNumber = Integer.toString(pathN);
 				//Util.Initialize();
 				results.put(Util.path, new ArrayList<Double>());
-				int[] startHours = new int[] {8, 11, 14, 17, 20};
+				/*int[] startHours = new int[] {8, 11, 14, 17, 20};
 				int[] predictionTimes = new int [] {0, 5, 10, 15, 20};
 				for (int predictionTime : predictionTimes) {
 					for (int startHour : startHours) {
 						RunExperiment(startHour, PredictionMethod.Historic, predictionTime);
 						System.out.println(String.format("Finished Path%d at startHour %d prediction time %d" , pathN, startHour, predictionTime));
 					}
-				}
-				/*int[] startHours = new int[] {8, 11, 14, 17, 20};
-				int[] predictionTimes = new int[] {0};
+				}*/
+				int[] startHours = new int[] {8, 11, 14, 17, 20};
+				int[] predictionTimes = new int[] {0, 5, 10, 15, 20};
 				double[] simThresholds = new double[] {0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 1};
 				//int[] startHours = new int[] {8, 17};
 				for (int predictionTime : predictionTimes) {
 					for (double similarity : simThresholds) {
 						for (int startHour : startHours) {
 							Util.similarityThreshold = similarity;
-							RunExperiment(startHour, predictionTime);
+							RunExperiment(startHour, PredictionMethod.Filtered, predictionTime);
 							System.out.println(String.format("Finished Path%d at startHour %d with threshold %f and predictionTime %d" , pathN, startHour, similarity, predictionTime));
 						}
 					}
-				}*/
+				}
 				/*int[] startHours = new int[] {8, 11, 14, 17, 20};
 				int[] timeHorizons = new int[] {10, 15, 20, 25, 30};
 				int[] predictionTimes = new int[] {0, 5, 10, 15, 20};
