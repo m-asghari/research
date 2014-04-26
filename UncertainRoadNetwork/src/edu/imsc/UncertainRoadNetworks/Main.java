@@ -18,6 +18,10 @@ public class Main {
 	public static HashMap<String, ArrayList<Double>> results;
 	
 	public static void main(String[] args) {
+		int [] startHours = new int[] {8, 11, 14, 17, 20};
+		//int[] predictionTimes = new int [] {0, 5, 10, 15, 20};
+		int [] predictionTimes = new int[] {30, 40};
+		
 		try {
 			FileReader fr = new FileReader("links.txt");
 			BufferedReader br = new BufferedReader(fr);
@@ -30,18 +34,33 @@ public class Main {
 				Util.pathNumber = Integer.toString(pathN);
 				//Util.Initialize();
 				results.put(Util.path, new ArrayList<Double>());
-				/*int[] startHours = new int[] {8, 11, 14, 17, 20};
-				int[] predictionTimes = new int [] {0, 5, 10, 15, 20};
 				for (int predictionTime : predictionTimes) {
 					for (int startHour : startHours) {
 						RunExperiment(startHour, PredictionMethod.Historic, predictionTime);
 						System.out.println(String.format("Finished Path%d at startHour %d prediction time %d" , pathN, startHour, predictionTime));
 					}
-				}*/
-				int[] startHours = new int[] {8, 11, 14, 17, 20};
-				int[] predictionTimes = new int[] {0, 5, 10, 15, 20};
+				}
+				WriteResultsToFile(results, "results2_links_Historic_discrete.csv");
+			}
+			br.close();
+			fr.close();
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+		try {
+			FileReader fr = new FileReader("links.txt");
+			BufferedReader br = new BufferedReader(fr);
+			results = new HashMap<String, ArrayList<Double>>();
+			String link = "";
+			int pathN = 0;
+			while ((link = br.readLine()) != null) {
+				pathN++;
+				Util.path = link;
+				Util.pathNumber = Integer.toString(pathN);
+				//Util.Initialize();
+				results.put(Util.path, new ArrayList<Double>());
 				double[] simThresholds = new double[] {0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 1};
-				//int[] startHours = new int[] {8, 17};
 				for (int predictionTime : predictionTimes) {
 					for (double similarity : simThresholds) {
 						for (int startHour : startHours) {
@@ -51,20 +70,40 @@ public class Main {
 						}
 					}
 				}
-				/*int[] startHours = new int[] {8, 11, 14, 17, 20};
-				int[] timeHorizons = new int[] {10, 15, 20, 25, 30};
-				int[] predictionTimes = new int[] {0, 5, 10, 15, 20};
+				WriteResultsToFile(results, "results2_links_Filtered_discrete.csv");
+			}
+			br.close();
+			fr.close();
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+		try {
+			FileReader fr = new FileReader("links.txt");
+			BufferedReader br = new BufferedReader(fr);
+			results = new HashMap<String, ArrayList<Double>>();
+			String link = "";
+			int pathN = 0;
+			while ((link = br.readLine()) != null) {
+				pathN++;
+				Util.path = link;
+				Util.pathNumber = Integer.toString(pathN);
+				//Util.Initialize();
+				results.put(Util.path, new ArrayList<Double>());
+				//int[] timeHorizons = new int[] {20, 30, 40, 50, 60};
+				int[] timeHorizons = new int[] {40, 50, 60};
+				predictionTimes = new int [] {0, 5, 10, 15, 20, 30, 40};
 				for (int predictionTime : predictionTimes) {
 					for (int timeHorizon : timeHorizons) {
 						for (int startHour : startHours) {
 							Util.alpha = 1 - ((double)predictionTime/timeHorizon);
 							if (Util.alpha < 0.0) Util.alpha = 0.0;
-							RunExperiment(startHour, predictionTime);
+							RunExperiment(startHour, PredictionMethod.Interpolated, predictionTime);
 							System.out.println(String.format("Finished Path%d at startHour %d with timeHorizof %d and predictionTime %d" , pathN, startHour, timeHorizon, predictionTime));
 						}
 					}
-				}*/
-				WriteResultsToFile(results);
+				}
+				WriteResultsToFile(results, "results2_links_Interpolated_discrete.csv");
 			}
 			br.close();
 			fr.close();
@@ -74,9 +113,10 @@ public class Main {
 		}
 	}
 	
-	public static void WriteResultsToFile(HashMap<String, ArrayList<Double>> results){
+	public static void WriteResultsToFile(HashMap<String, ArrayList<Double>> results, String filePath){
 		try {
-			FileWriter fw = new FileWriter("results_links_Historic_discrete.csv");
+			//FileWriter fw = new FileWriter("results_links_Historic_discrete.csv");
+			FileWriter fw = new FileWriter(filePath);
 			BufferedWriter bw = new BufferedWriter(fw);
 			for (Entry<String, ArrayList<Double>> e : results.entrySet()) {
 				bw.write(e.getKey()+",");
@@ -113,7 +153,7 @@ public class Main {
 			PredictionMethod[] values = new PredictionMethod[] {predMethod};
 			for (PredictionMethod predictionMethod : values ) {
 				Util.predictionMethod = predictionMethod;
-				//FileWriter fw = new FileWriter(String.format("Approach1_%s.txt", predictionMethod.toString()));
+				//FileWriter fw = new FileWriter(String.format("Approach2_%s.txt", predictionMethod.toString()));
 				//BufferedWriter bw = new BufferedWriter(fw);
 				Double totalScore = 0.0;
 				int totalCount = 0;
@@ -145,7 +185,7 @@ public class Main {
 							Double score = modelDist.GetScore(actualTime);
 							totalScore += score;
 							totalCount++;
-							//System.out.println(Approach1.GetResults((Calendar)startTime.clone(), actualTime, score));
+							//System.out.println(Approach2.GetResults((Calendar)startTime.clone(), actualTime, score));
 							//bw.write(Approach1.GetResults((Calendar)startTime.clone(), actualTime, score));
 							//bw.write("\n");
 						}
