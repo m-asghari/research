@@ -5,7 +5,7 @@ import java.util.Map.Entry;
 
 
 public class PMF {
-	public static int binWidth = 1;
+	public static int binWidth = 5;
 	
 	public int min;
 	public int max;

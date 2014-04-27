@@ -18,16 +18,16 @@ public class Main {
 	public static HashMap<String, ArrayList<Double>> results;
 	
 	public static void main(String[] args) {
-		int [] startHours = new int[] {8, 11, 14, 17, 20};
-		//int[] predictionTimes = new int [] {0, 5, 10, 15, 20};
-		int [] predictionTimes = new int[] {30, 40};
+		int[] startHours = new int[] {8, 11, 14, 17, 20};
+		//int[] predictionTimes = new int[] {5, 10, 15, 20, 30, 40};
+		int[] predictionTimes = new int[] {20};
 		
 		try {
-			FileReader fr = new FileReader("links.txt");
+			FileReader fr = new FileReader("paths.txt");
 			BufferedReader br = new BufferedReader(fr);
 			results = new HashMap<String, ArrayList<Double>>();
 			String link = "";
-			int pathN = 0;
+			int pathN = 100;
 			while ((link = br.readLine()) != null) {
 				pathN++;
 				Util.path = link;
@@ -40,7 +40,7 @@ public class Main {
 						System.out.println(String.format("Finished Path%d at startHour %d prediction time %d" , pathN, startHour, predictionTime));
 					}
 				}
-				WriteResultsToFile(results, "results2_links_Historic_discrete.csv");
+				WriteResultsToFile(results, "results2_paths_Appraoch2_Historic_discrete.csv");
 			}
 			br.close();
 			fr.close();
@@ -49,18 +49,19 @@ public class Main {
 			e.printStackTrace();
 		}
 		try {
-			FileReader fr = new FileReader("links.txt");
+			FileReader fr = new FileReader("paths.txt");
 			BufferedReader br = new BufferedReader(fr);
 			results = new HashMap<String, ArrayList<Double>>();
 			String link = "";
-			int pathN = 0;
+			int pathN = 100;
 			while ((link = br.readLine()) != null) {
 				pathN++;
 				Util.path = link;
 				Util.pathNumber = Integer.toString(pathN);
 				//Util.Initialize();
 				results.put(Util.path, new ArrayList<Double>());
-				double[] simThresholds = new double[] {0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 1};
+				//double[] simThresholds = new double[] {0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 1};
+				double[] simThresholds = new double[] {0.3};
 				for (int predictionTime : predictionTimes) {
 					for (double similarity : simThresholds) {
 						for (int startHour : startHours) {
@@ -70,7 +71,7 @@ public class Main {
 						}
 					}
 				}
-				WriteResultsToFile(results, "results2_links_Filtered_discrete.csv");
+				WriteResultsToFile(results, "results2_paths_Appraoch2_Filtered_discrete.csv");
 			}
 			br.close();
 			fr.close();
@@ -79,20 +80,19 @@ public class Main {
 			e.printStackTrace();
 		}
 		try {
-			FileReader fr = new FileReader("links.txt");
+			FileReader fr = new FileReader("paths.txt");
 			BufferedReader br = new BufferedReader(fr);
 			results = new HashMap<String, ArrayList<Double>>();
 			String link = "";
-			int pathN = 0;
+			int pathN = 100;
 			while ((link = br.readLine()) != null) {
 				pathN++;
 				Util.path = link;
 				Util.pathNumber = Integer.toString(pathN);
 				//Util.Initialize();
 				results.put(Util.path, new ArrayList<Double>());
-				//int[] timeHorizons = new int[] {20, 30, 40, 50, 60};
-				int[] timeHorizons = new int[] {40, 50, 60};
-				predictionTimes = new int [] {0, 5, 10, 15, 20, 30, 40};
+				int[] timeHorizons = new int[] {10, 15, 20, 25, 30, 40, 50, 60};
+				//int[] timeHorizons = new int[] {60};
 				for (int predictionTime : predictionTimes) {
 					for (int timeHorizon : timeHorizons) {
 						for (int startHour : startHours) {
@@ -103,7 +103,7 @@ public class Main {
 						}
 					}
 				}
-				WriteResultsToFile(results, "results2_links_Interpolated_discrete.csv");
+				WriteResultsToFile(results, "results2_paths_Appraoch2_Interpolated_discrete.csv");
 			}
 			br.close();
 			fr.close();
