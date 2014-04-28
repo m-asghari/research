@@ -196,12 +196,9 @@ public class SpeedUp {
 			ors.close();
 			stm.close();
 			
-			Util.Log(travelTimes.toString());
-
 			Double sum = 0.0;
 			for (Map.Entry<String, Double> e : travelTimes.entrySet())
 				sum += e.getValue();
-			Util.Log(Double.toString(sum));
 			retTimes.add(sum);
 		}
 		return retTimes;

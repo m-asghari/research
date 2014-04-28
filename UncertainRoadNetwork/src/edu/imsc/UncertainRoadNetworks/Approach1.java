@@ -19,7 +19,7 @@ public class Approach1 {
 		NormalDist retDist = new NormalDist(0, 0);
 		for (int s = 0; s < sensorList.length - 1; ++s) {
 			String from = sensorList[s];
-			Util.Log(String.format("\nfrom: %s", from));
+			Util.Log("From: " + from);
 			NormalDist edgeDist = Util.getNormalDist(from, tod, days);
 			if (Util.predictionMethod == PredictionMethod.Interpolated) {
 				Double actualTravelTime = Util.GetActualTravelTime(from, (Calendar)startTime.clone());

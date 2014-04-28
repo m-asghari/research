@@ -5,7 +5,8 @@ import java.util.Map.Entry;
 
 
 public class PMF {
-	public static int binWidth = 5;
+	public static int binWidth = 1;
+	public static Double cutOff = 0.0001;
 	
 	public int min;
 	public int max;
@@ -71,19 +72,39 @@ public class PMF {
 	}
 	
 	public void Adjust() {
-		while (this.prob.get(this.min) == 0.0) {
+		while (this.prob.get(this.min) <= PMF.cutOff) {
 			this.prob.remove(this.min);
 			this.min += binWidth;
 		}
-		while (this.prob.get(this.max) == 0.0) {
+		while (this.prob.get(this.max) <= PMF.cutOff) {
 			this.prob.remove(this.max);
 			this.max -= binWidth;
 		}
+		this.Normalize();
+	}
+	
+	public void Normalize() {
+		Double sum = 0.0;
+		for (Entry<Integer, Double> e : this.prob.entrySet()) {
+			sum += e.getValue();
+		}
+		for (int i = this.min; i <= this.max; i += PMF.binWidth) {
+			Double old = this.Prob(i);
+			this.prob.put(i, old/sum);			
+		}		
 	}
 	
 	public Double Prob(Integer k) {
 		Double retVal = this.prob.get(k);
 		return (retVal != null) ? retVal : 0.0;
+	}
+	
+	public Double ExpectedValue() {
+		Double ev = 0.0;
+		for (Entry<Integer, Double> e : this.prob.entrySet()) {
+			ev += e.getValue() * e.getKey();
+		}
+		return ev;
 	}
 	
 	/*public PMF Add(PMF other) {
@@ -100,8 +121,13 @@ public class PMF {
 	
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		for (Entry<Integer, Double> e : this.prob.entrySet())
+		Double sum = 0.0;
+		for (Entry<Integer, Double> e : this.prob.entrySet()) {
 			sb.append(String.format("P(%d): %f\t", e.getKey(), e.getValue()));
+			sum += e.getValue();
+		}
+		sb.append("Expected Value: " + Double.toString(this.ExpectedValue()) + "\t");
+		sb.append("Sum: " + Double.toString(sum));
 		return sb.toString();
 	}
 

@@ -40,7 +40,7 @@ public class Main {
 						System.out.println(String.format("Finished Path%d at startHour %d prediction time %d" , pathN, startHour, predictionTime));
 					}
 				}
-				WriteResultsToFile(results, "results2_paths_Appraoch2_Historic_discrete.csv");
+				WriteResultsToFile(results, "results3_paths_Approach2_Historic_discrete.csv");
 			}
 			br.close();
 			fr.close();
@@ -71,7 +71,7 @@ public class Main {
 						}
 					}
 				}
-				WriteResultsToFile(results, "results2_paths_Appraoch2_Filtered_discrete.csv");
+				WriteResultsToFile(results, "results3_paths_Approach2_Filtered_discrete.csv");
 			}
 			br.close();
 			fr.close();
@@ -103,7 +103,7 @@ public class Main {
 						}
 					}
 				}
-				WriteResultsToFile(results, "results2_paths_Appraoch2_Interpolated_discrete.csv");
+				WriteResultsToFile(results, "results3_paths_Approach2_Interpolated_discrete.csv");
 			}
 			br.close();
 			fr.close();
@@ -153,7 +153,7 @@ public class Main {
 			PredictionMethod[] values = new PredictionMethod[] {predMethod};
 			for (PredictionMethod predictionMethod : values ) {
 				Util.predictionMethod = predictionMethod;
-				//FileWriter fw = new FileWriter(String.format("Approach2_%s.txt", predictionMethod.toString()));
+				//FileWriter fw = new FileWriter(String.format("Approach1_%s.txt", predictionMethod.toString()));
 				//BufferedWriter bw = new BufferedWriter(fw);
 				Double totalScore = 0.0;
 				int totalCount = 0;
@@ -185,7 +185,7 @@ public class Main {
 							Double score = modelDist.GetScore(actualTime);
 							totalScore += score;
 							totalCount++;
-							//System.out.println(Approach2.GetResults((Calendar)startTime.clone(), actualTime, score));
+							//System.out.println(Approach1.GetResults((Calendar)startTime.clone(), actualTime, score));
 							//bw.write(Approach1.GetResults((Calendar)startTime.clone(), actualTime, score));
 							//bw.write("\n");
 						}

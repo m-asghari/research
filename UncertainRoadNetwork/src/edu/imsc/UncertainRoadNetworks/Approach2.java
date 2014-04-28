@@ -20,7 +20,7 @@ public class Approach2 {
 		
 		PMF retPMF = new PMF();
 		for (int s = 0; s < sensorList.length - 1; ++s) {
-			String from = sensorList[s];	
+			String from = sensorList[s];
 			PMF edgePMF = Util.getPMF(from, tod, days);
 			if (Util.predictionMethod == PredictionMethod.Interpolated) {
 				Double actualTime = Util.GetActualTravelTime(from, (Calendar)startTime.clone());

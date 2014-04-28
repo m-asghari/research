@@ -43,22 +43,22 @@ public class Approach6 {
 			int prevMin = Math.min(congPMF.min, normPMF.min);
 			int prevMax = Math.max(congPMF.max, normPMF.max);
 			PMF newCongPMF = new PMF(prevMin + edgeCongPMF.min, prevMax + edgeCongPMF.max);
-			for (int b = newCongPMF.min; b <= newCongPMF.max; ++b) {
+			for (int b = newCongPMF.min; b <= newCongPMF.max; b+=PMF.binWidth) {
 				Double sum = 0.0;
-				for (int h = prevMin; h <= prevMax; ++h) { 
+				for (int h = prevMin; h <= prevMax && h <= b; h+=PMF.binWidth) { 
 					sum += transitionProb.get(Util.t2t) * congPMF.Prob(h) * edgeCongPMF.Prob(b-h);
 					sum += transitionProb.get(Util.f2t) * normPMF.Prob(h) * edgeCongPMF.Prob(b-h);
 				}
 				newCongPMF.prob.put(b, sum);
 			}
 			PMF newNormPMF = new PMF(prevMin + edgeNormPMF.min, prevMax + edgeNormPMF.max);
-			for (int b = newNormPMF.min; b <= newNormPMF.max; ++b) {
+			for (int b = newNormPMF.min; b <= newNormPMF.max; b+=PMF.binWidth) {
 				Double sum = 0.0;
-				for (int h = prevMin; h <= prevMax; ++h) {
+				for (int h = prevMin; h <= prevMax && h <= b; h+=PMF.binWidth) {
 					sum += transitionProb.get(Util.t2f) * congPMF.Prob(h) * edgeNormPMF.Prob(b-h);
 					sum += transitionProb.get(Util.f2f) * normPMF.Prob(h) * edgeNormPMF.Prob(b-h);
 				}
-				newCongPMF.prob.put(b, sum);
+				newNormPMF.prob.put(b, sum);
 			}
 			congPMF = newCongPMF;
 			normPMF = newNormPMF;			
