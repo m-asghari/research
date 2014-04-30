@@ -72,12 +72,12 @@ public class PMF {
 	}
 	
 	public void Adjust() {
-		while (this.prob.get(this.min) <= PMF.cutOff) {
-			this.prob.remove(this.min);
+		while (this.Prob(this.min) <= PMF.cutOff) {
+			if (this.prob.containsKey(this.min)) this.prob.remove(this.min);
 			this.min += binWidth;
 		}
-		while (this.prob.get(this.max) <= PMF.cutOff) {
-			this.prob.remove(this.max);
+		while (this.Prob(this.max) <= PMF.cutOff) {
+			if (this.prob.containsKey(this.max)) this.prob.remove(this.max);
 			this.max -= binWidth;
 		}
 		this.Normalize();

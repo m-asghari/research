@@ -32,7 +32,7 @@ public class Main {
 				pathN++;
 				Util.path = link;
 				Util.pathNumber = Integer.toString(pathN);
-				//Util.Initialize();
+				Util.Initialize();
 				results.put(Util.path, new ArrayList<Double>());
 				for (int predictionTime : predictionTimes) {
 					for (int startHour : startHours) {
@@ -58,7 +58,7 @@ public class Main {
 				pathN++;
 				Util.path = link;
 				Util.pathNumber = Integer.toString(pathN);
-				//Util.Initialize();
+				Util.Initialize();
 				results.put(Util.path, new ArrayList<Double>());
 				//double[] simThresholds = new double[] {0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 1};
 				double[] simThresholds = new double[] {0.3};
