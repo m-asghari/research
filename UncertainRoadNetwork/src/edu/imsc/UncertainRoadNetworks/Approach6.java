@@ -16,7 +16,7 @@ import edu.imsc.UncertainRoadNetworks.Util.PredictionMethod;
 // 1 & True -> Congested
 public class Approach6 {
 	
-	public static PMF GenerateModels(String[] sensorList, 
+	public static PMF GenerateModel(String[] sensorList, 
 			String timeOfDay, ArrayList<Integer> days,
 			Calendar startTime) throws SQLException, ParseException, IOException{		
 		Calendar tod = Calendar.getInstance();
