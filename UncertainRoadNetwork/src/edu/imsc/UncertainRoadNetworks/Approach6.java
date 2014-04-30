@@ -60,6 +60,8 @@ public class Approach6 {
 				}
 				newNormPMF.prob.put(b, sum);
 			}
+			newCongPMF.Adjust();
+			newNormPMF.Adjust();
 			congPMF = newCongPMF;
 			normPMF = newNormPMF;			
 		}

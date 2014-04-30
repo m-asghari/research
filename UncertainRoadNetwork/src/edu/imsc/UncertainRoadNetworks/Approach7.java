@@ -54,6 +54,7 @@ public class Approach7 {
 				}
 				newCongPMF.prob.put(b, sum);
 			}
+			newCongPMF.Adjust();
 			congPMF = newCongPMF;
 			PMF newNormPMF = new PMF(prevMin + edgeNormPMFs.get(prevMin).min, prevMax + edgeNormPMFs.get(prevMax).max);
 			for (int b = newNormPMF.min; b <= newNormPMF.max; ++b) {
@@ -64,6 +65,7 @@ public class Approach7 {
 				}
 				newCongPMF.prob.put(b, sum);
 			}
+			newNormPMF.Adjust();
 			normPMF = newNormPMF;
 		}
 		return new Pair<PMF, PMF>(normPMF, congPMF);

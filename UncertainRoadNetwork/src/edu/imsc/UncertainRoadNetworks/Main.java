@@ -18,12 +18,12 @@ public class Main {
 	public static HashMap<String, ArrayList<Double>> results;
 	
 	public static void main(String[] args) {
-		int[] startHours = new int[] {8, 11, 14, 17, 20};
-		//int[] predictionTimes = new int[] {5, 10, 15, 20, 30, 40};
-		int[] predictionTimes = new int[] {20};
+		int[] startHours = new int[] {8, 11, 14, 17};
+		int[] predictionTimes = new int[] {15, 30, 60, 90, 120};
+		//int[] predictionTimes = new int[] {20};
 		
-		try {
-			FileReader fr = new FileReader("paths.txt");
+		/*try {
+			FileReader fr = new FileReader("links.txt");
 			BufferedReader br = new BufferedReader(fr);
 			results = new HashMap<String, ArrayList<Double>>();
 			String link = "";
@@ -40,7 +40,7 @@ public class Main {
 						System.out.println(String.format("Finished Path%d at startHour %d prediction time %d" , pathN, startHour, predictionTime));
 					}
 				}
-				WriteResultsToFile(results, "results3_paths_Approach2_Historic_discrete.csv");
+				WriteResultsToFile(results, "results3_links_Historic_discrete.csv");
 			}
 			br.close();
 			fr.close();
@@ -49,7 +49,7 @@ public class Main {
 			e.printStackTrace();
 		}
 		try {
-			FileReader fr = new FileReader("paths.txt");
+			FileReader fr = new FileReader("links.txt");
 			BufferedReader br = new BufferedReader(fr);
 			results = new HashMap<String, ArrayList<Double>>();
 			String link = "";
@@ -71,39 +71,49 @@ public class Main {
 						}
 					}
 				}
-				WriteResultsToFile(results, "results3_paths_Approach2_Filtered_discrete.csv");
+				WriteResultsToFile(results, "results3_links_Filtered_discrete.csv");
 			}
 			br.close();
 			fr.close();
 		}
 		catch (Exception e) {
 			e.printStackTrace();
-		}
+		}*/
 		try {
-			FileReader fr = new FileReader("paths.txt");
+			FileReader fr = new FileReader("links.txt");
 			BufferedReader br = new BufferedReader(fr);
 			results = new HashMap<String, ArrayList<Double>>();
 			String link = "";
-			int pathN = 100;
+			int pathN = 0;
 			while ((link = br.readLine()) != null) {
 				pathN++;
 				Util.path = link;
 				Util.pathNumber = Integer.toString(pathN);
 				//Util.Initialize();
 				results.put(Util.path, new ArrayList<Double>());
-				int[] timeHorizons = new int[] {10, 15, 20, 25, 30, 40, 50, 60};
-				//int[] timeHorizons = new int[] {60};
+				//int[] timeHorizons = new int[] {10, 15, 20, 25, 30, 40, 50, 60};
+				double[] alphas = new double[] {0, 0.25, 0.5, 0.75, 1};
 				for (int predictionTime : predictionTimes) {
-					for (int timeHorizon : timeHorizons) {
+					/*for (int timeHorizon : timeHorizons) {
+						if (predictionTime <= timeHorizon) { 
+							for (int startHour : startHours) {
+								Util.alpha = 1 - ((double)predictionTime/timeHorizon);
+								if (Util.alpha < 0.0) Util.alpha = 0.0;
+								RunExperiment(startHour, PredictionMethod.Interpolated, predictionTime);
+								System.out.println(String.format("Finished Path%d at startHour %d with timeHorizof %d and predictionTime %d" , pathN, startHour, timeHorizon, predictionTime));
+							}
+						}
+					}*/
+					for (double alpha : alphas) {
 						for (int startHour : startHours) {
-							Util.alpha = 1 - ((double)predictionTime/timeHorizon);
-							if (Util.alpha < 0.0) Util.alpha = 0.0;
+							Util.alpha = alpha;
 							RunExperiment(startHour, PredictionMethod.Interpolated, predictionTime);
-							System.out.println(String.format("Finished Path%d at startHour %d with timeHorizof %d and predictionTime %d" , pathN, startHour, timeHorizon, predictionTime));
+							System.out.println(String.format("Finished Path%d at startHour %d with alpha %f and predictionTime %d" , pathN, startHour, alpha, predictionTime));
 						}
 					}
+					
 				}
-				WriteResultsToFile(results, "results3_paths_Approach2_Interpolated_discrete.csv");
+				WriteResultsToFile(results, "results5_links_Interpolated_discrete.csv");
 			}
 			br.close();
 			fr.close();
