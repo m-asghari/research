@@ -62,6 +62,7 @@ public class QueryTemplates {
 	public static String insertCont = readQuery("QueryTemplates\\LinkCorrelations\\InsertCont.sql");
 	public static String selectCong = readQuery("QueryTemplates\\LinkCorrelations\\SelectCong.sql");
 	public static String updateCong = readQuery("QueryTemplates\\LinkCorrelations\\UpdateCong.sql");
+	public static String selectEdgeCong = readQuery("QueryTemplates\\LinkCorrelations\\SelectEdgeCong.sql");
 	
 	//KML Generation
 	public static String KMLGenerationQuery = readQuery("QueryTemplates\\KMLGenerationQuery.sql");

@@ -14,7 +14,7 @@ import edu.imsc.UncertainRoadNetworks.Util.PredictionMethod;
 // 1 & True -> Congested
 public class Approach7 {
 	
-	public static Pair<PMF, PMF> GenerateModel(String[] sensorList, String timeOfDay, 
+	public static PMF GenerateModel(String[] sensorList, String timeOfDay, 
 			ArrayList<Integer> days, Calendar startTime) throws SQLException, ParseException{		
 		Calendar tod = Calendar.getInstance();
 		tod.setTime(Util.timeOfDayDF.parse(timeOfDay));
@@ -68,7 +68,17 @@ public class Approach7 {
 			newNormPMF.Adjust();
 			normPMF = newNormPMF;
 		}
-		return new Pair<PMF, PMF>(normPMF, congPMF);
+		String lastEdge = sensorList[sensorList.length - 2];
+		Pair<Double, Double> probs = GenerateLinkCorrelations.GetLinkCongestion(lastEdge);
+		Double normProb = probs.getFirst(), congProb = probs.getSecond();
+		int min = Math.min(normPMF.min, congPMF.min);
+		int max = Math.max(normPMF.max, congPMF.max);
+		PMF retPMF = new PMF(min, max);
+		for (int i = min; i <= max; i+=PMF.binWidth) {
+			retPMF.prob.put(i, normProb*normPMF.Prob(i) + congProb*congPMF.Prob(i));
+		}
+		retPMF.Adjust();
+		return retPMF;
 	}
 	
 	public static PMF GenerateActual(String[] sensorList, 

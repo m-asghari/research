@@ -172,4 +172,28 @@ public class GenerateLinkCorrelations {
 		stm.execute(query);
 		stm.close();		
 	}
+	
+	public static Pair<Double, Double> GetLinkCongestion(String from) throws SQLException{
+		Pair<Double, Double> retVal = new Pair<Double, Double>(0.0, 0.0);
+		Double cong = 0.0, norm = 0.0;
+		
+		Statement stm = Util.conn.createStatement();
+		String query = QueryTemplates.selectEdgeCong
+				.replace("##PATH_NUM##", Util.pathNumber)
+				.replace("##FROM##", from)
+				.replace("##CONG##", "FALSE");
+		OracleResultSet ors = (OracleResultSet) stm.executeQuery(query);
+		if (ors.next()) norm = ors.getDouble(1);
+		ors.close();
+		query = QueryTemplates.selectEdgeCong
+				.replace("##PATH_NUM##", Util.pathNumber)
+				.replace("##FROM##", from)
+				.replace("##CONG##", "TRUE");
+		ors = (OracleResultSet) stm.executeQuery(query);
+		if (ors.next()) cong = ors.getDouble(1);
+		Double sum = (norm + cong != 0.0) ? norm + cong : 1;
+		retVal.setFirst(norm/sum);
+		retVal.setSecond(cong/sum);
+		return retVal;
+	}
 }
