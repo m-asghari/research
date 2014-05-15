@@ -6,6 +6,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.HashMap;
 
 import oracle.jdbc.driver.OracleResultSet;
 
@@ -95,19 +96,31 @@ public class DataPreparation {
 		return sb.toString();
 	}
 	
-	@SuppressWarnings("unused")
+	
 	private static void GeneratePathQueries(String[] sensorList) throws SQLException, IOException {
-		//FileWriter fw = new FileWriter(String.format("Path%s_Queries.sql", Util.pathNumber));
-		//BufferedWriter bw = new BufferedWriter(fw);
-		
-		//GeneratePathSensorTable(sensorList);
+		GeneratePathSensorTable(sensorList);
 		bw.write(GeneratePathEdgeTable(sensorList.length));
 		bw.write(QueryTemplates.pathPatterns.replace("##PATH_NUM##", Util.pathNumber));
-		
-		//bw.close();
-		//fw.close();
+	}
+	
+	@SuppressWarnings("unused")
+	private static void DropPath() throws SQLException{
+		String[] queries = QueryTemplates.dropPath.split(";");
+		Statement stm = Util.conn.createStatement();
+		for (String query : queries) {
+			String sqlQuery = query.replace("##PATH_NUM##", Util.pathNumber);
+			try {
+				stm.execute(sqlQuery);
+			}
+			catch (Exception e) {
+				System.out.println(e.getMessage());
+				continue;
+			}
+			
+		}
 	}
 
+	@SuppressWarnings("unused")
 	private static void UpdateTravelTimes(int totalPaths, String operation) throws SQLException{
 		for (int pathNum = 1; pathNum <= totalPaths; ++pathNum) {
 			Statement stm = Util.conn.createStatement();
@@ -121,22 +134,47 @@ public class DataPreparation {
 	}
 
 	public static void main(String[] args) {
+		/*try {
+			String[] startHours = new String[] {"700", "800", "1500", "1600", "1700"};
+			int pathN = 50;
+			while (pathN < 100) {
+				pathN++;
+				for (String startHour : startHours) {
+					Util.pathNumber = startHour + Integer.toString(pathN);
+					//Statement stm = Util.conn.createStatement();
+					//stm.execute("DROP TABLE PATH" + Util.pathNumber + "_SENSORS");
+					DropPath();
+				}
+			}
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}*/
 		try {
 			fw = new FileWriter("linkQueries.sql");
 			bw = new BufferedWriter(fw);
-			FileReader fr = new FileReader("paths.txt");
-			BufferedReader br = new BufferedReader(fr);
-			String link = "";
-			int pathN = 100;
-			while ((link = br.readLine()) != null) {
-				pathN++;
-				Util.pathNumber = Integer.toString(pathN);
-				Util.path = link;
-				String[] sensorList = Util.path.split("-");
-				GeneratePathQueries(sensorList);
+			
+			String[] startHours = new String[] {"700", "800", "1500", "1600", "1700"};
+			HashMap<String, Pair<FileReader, BufferedReader>> inputFiles = new HashMap<String, Pair<FileReader,BufferedReader>>();
+			for (String startHour : startHours) {
+				FileReader fr = new FileReader("paths_r" + startHour + ".txt");
+				BufferedReader br = new BufferedReader(fr);
+				inputFiles.put(startHour, new Pair<FileReader, BufferedReader>(fr, br));
 			}
-			br.close();
-			fr.close();
+			int pathN = 110;
+			while (pathN < 120) {
+				pathN++;
+				for (String startHour : startHours) {
+					Util.pathNumber = startHour + Integer.toString(pathN);					
+					Util.path = inputFiles.get(startHour).getSecond().readLine();
+					String[] sensorList = Util.path.split("-");
+					GeneratePathQueries(sensorList);
+				}
+			}
+			for (String startHour : startHours) {
+				inputFiles.get(startHour).getSecond().close();
+				inputFiles.get(startHour).getFirst().close();
+			}
 			bw.close();
 			fw.close();
 			//UpdateTravelTimes(52, "*");

@@ -2,8 +2,6 @@ package edu.imsc.UncertainRoadNetworks;
 //Link Travel Times: Discrete
 //Time Dependency: None
 //Link Corelation: Yes
-import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.text.ParseException;
@@ -16,15 +14,8 @@ import edu.imsc.UncertainRoadNetworks.Util.PredictionMethod;
 // 1 & True -> Congested
 public class Approach6 {
 	
-	public static PMF GenerateModels(String[] sensorList, 
-			String timeOfDay, ArrayList<Integer> days,
-			Calendar startTime) throws SQLException, ParseException, IOException{		
-		Calendar tod = Calendar.getInstance();
-		tod.setTime(Util.timeOfDayDF.parse(timeOfDay));
-		
-		FileWriter fw = new FileWriter("logs.txt");
-		BufferedWriter bw = new BufferedWriter(fw);	
-		
+	public static PMF GenerateModels(String[] sensorList, String tod, 
+			ArrayList<Integer> days, Calendar startTime) throws SQLException, ParseException, IOException{		
 		PMF congPMF = Util.getPMF(sensorList[0], tod, days, true);
 		PMF normPMF = Util.getPMF(sensorList[0], tod, days, false);
 		for (int s = 1; s < sensorList.length - 1; ++s) {
@@ -34,11 +25,12 @@ public class Approach6 {
 			PMF edgeCongPMF = Util.getPMF(from, tod, days, true);
 			PMF edgeNormPMF = Util.getPMF(from, tod, days, false);
 			if (Util.predictionMethod == PredictionMethod.Interpolated) {
-				Double currTravelTime = Util.GetActualTravelTime(from, (Calendar)startTime.clone());
-				if (currTravelTime != 0.0) {
-					edgeCongPMF = edgeCongPMF.Interpolate(currTravelTime, Util.alpha);
-					edgeNormPMF = edgeNormPMF.Interpolate(currTravelTime, Util.alpha);
-				}				
+				Double actualTime = Util.GetActualTravelTime(from, (Calendar)startTime.clone());
+				if (actualTime == null) {
+					return null;
+				}
+				edgeCongPMF = edgeCongPMF.Interpolate(actualTime, Util.alpha);
+				edgeNormPMF = edgeNormPMF.Interpolate(actualTime, Util.alpha);
 			}
 			int prevMin = Math.min(congPMF.min, normPMF.min);
 			int prevMax = Math.max(congPMF.max, normPMF.max);
@@ -65,8 +57,7 @@ public class Approach6 {
 			congPMF = newCongPMF;
 			normPMF = newNormPMF;			
 		}
-		bw.close();
-		fw.close();
+		//Rewrinte using PathData
 		String lastEdge = sensorList[sensorList.length - 2];
 		Pair<Double, Double> probs = GenerateLinkCorrelations.GetLinkCongestion(lastEdge);
 		Double normProb = probs.getFirst(), congProb = probs.getSecond();
@@ -80,17 +71,14 @@ public class Approach6 {
 		return retPMF;
 	}
 	
-	public static PMF GenerateActual(String[] sensorList, 
-			ArrayList<Calendar> startTimes) throws SQLException, ParseException {
-		ArrayList<Double> travelTimes = SpeedUp.TimeInependentTravelTime(sensorList, startTimes);
-		PMF retPMF = new PMF(travelTimes);
-		return retPMF;
-	}
-	
 	public static Double GenerateActual(String[] sensorList,
 			Calendar startTime) throws SQLException, ParseException {
-		ArrayList<Calendar> temp = new ArrayList<Calendar>();
-		temp.add(startTime);
-		return SpeedUp.TimeInependentTravelTime(sensorList, temp).get(0);
+		return Util.GetActualTravelTime(sensorList, startTime);
+	}
+	
+	public static String GetResults(Calendar startTime, Double actualTime, Double score) {
+		String retStr = String.format("Start Time: %s, Actual Time: %f, Score: %f",
+				Util.oracleDF.format(startTime.getTime()), actualTime, score);
+		return retStr;
 	}
 }

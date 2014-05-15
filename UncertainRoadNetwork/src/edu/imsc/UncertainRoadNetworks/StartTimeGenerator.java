@@ -23,8 +23,8 @@ public class StartTimeGenerator {
 		this.nextDay.put(Calendar.MONDAY, 1);
 		this.nextDay.put(Calendar.TUESDAY, 1);
 		this.nextDay.put(Calendar.WEDNESDAY, 1);
-		this.nextDay.put(Calendar.THURSDAY, 4);
-		this.nextDay.put(Calendar.FRIDAY, 7);
+		this.nextDay.put(Calendar.THURSDAY, 1);
+		this.nextDay.put(Calendar.FRIDAY, 3);
 	}
 	
 	public void SetNextDays(int[] input) {

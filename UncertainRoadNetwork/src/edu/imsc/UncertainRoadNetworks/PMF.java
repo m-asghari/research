@@ -123,6 +123,7 @@ public class PMF {
 		StringBuilder sb = new StringBuilder();
 		Double sum = 0.0;
 		for (Entry<Integer, Double> e : this.prob.entrySet()) {
+			if (e.getValue().equals(0.0)) continue;
 			sb.append(String.format("P(%d): %f\t", e.getKey(), e.getValue()));
 			sum += e.getValue();
 		}
@@ -170,7 +171,7 @@ public class PMF {
 		Double cdf = 0.0;
 		Double score = 0.0;
 		int rounded = Util.RoundDouble(actualTime, binWidth);
-		for (int i = min; i < rounded && i <= max; i += binWidth) {
+		/*for (int i = min; i < rounded && i <= max; i += binWidth) {
 			cdf += Prob(i);
 			score += Math.pow(cdf, 2)*binWidth;
 		}
@@ -180,6 +181,19 @@ public class PMF {
 			score += ((rounded + ((double)binWidth/2)) - actualTime) * Math.pow(1-cdf, 2);
 		}
 		for (int i = rounded + 1; i <= this.max; i += binWidth ) {
+			cdf += Prob(i);
+			score += Math.pow(1-cdf, 2)*binWidth;
+		}*/
+		int gmin = Math.min(this.min, rounded);
+		int gmax = Math.max(this.max, rounded);
+		for (int i = gmin; i < rounded; ++i) {
+			cdf += Prob(i);
+			score += Math.pow(cdf,  2) * binWidth;
+		}
+		cdf += Prob(rounded);
+		score += (actualTime - (rounded - ((double)binWidth/2))) * Math.pow(cdf, 2);
+		score += ((rounded + ((double)binWidth/2)) - actualTime) * Math.pow(1-cdf, 2);
+		for (int i = rounded + 1; i < gmax; ++i) {
 			cdf += Prob(i);
 			score += Math.pow(1-cdf, 2)*binWidth;
 		}

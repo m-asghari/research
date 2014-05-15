@@ -11,112 +11,136 @@ import java.util.Map.Entry;
 import edu.imsc.UncertainRoadNetworks.Util.PredictionMethod;
 
 public class Main {
-	private static int[] targetDays = {Calendar.MONDAY, Calendar.TUESDAY, Calendar.WEDNESDAY, Calendar.THURSDAY}; 
+	private static int[] targetDays = {Calendar.MONDAY, Calendar.TUESDAY, Calendar.WEDNESDAY, Calendar.THURSDAY, Calendar.FRIDAY}; 
 	private static int startMinute = 0;
-	private static int k = 5; 
+	private static int k = 5;
+	private static HashMap<Pair<String, String>, Pair<Integer, Integer>> pathNums = new HashMap<Pair<String,String>, Pair<Integer,Integer>>();
 	
 	public static HashMap<String, ArrayList<Double>> results;
 	
 	public static void main(String[] args) {
-		int[] startHours = new int[] {8, 11, 14, 17};
-		int[] predictionTimes = new int[] {15, 30, 60, 90, 120};
-		//int[] predictionTimes = new int[] {20};
+		pathNums.put(new Pair<String, String>("p", "links"), new Pair<Integer, Integer>(0, 50));
+		pathNums.put(new Pair<String, String>("r", "links"), new Pair<Integer, Integer>(50, 100));
+		pathNums.put(new Pair<String, String>("p", "paths"), new Pair<Integer, Integer>(100, 110));
+		pathNums.put(new Pair<String, String>("r", "paths"), new Pair<Integer, Integer>(110, 120));
+		String linkType = "r";
+		String pathType = "links";
+		String distType = "continuous";
+		int minPath = pathNums.get(new Pair<String, String>(linkType, pathType)).getFirst();
+		int maxPath = pathNums.get(new Pair<String, String>(linkType, pathType)).getSecond();
+		int[] startHours = new int[] {7, 8, 15, 16, 17};
+		int[] predictionTimes = new int[] {5, 10, 15, 30, 60, 90, 120};
 		
-		/*try {
-			FileReader fr = new FileReader("links.txt");
-			BufferedReader br = new BufferedReader(fr);
+		try {
+			HashMap<Integer, Pair<FileReader, BufferedReader>> inputFiles = new HashMap<Integer, Pair<FileReader,BufferedReader>>();
+			for (int startHour : startHours) {
+				String filename = String.format("%s_%s%d00.txt", pathType, linkType, startHour);
+				FileReader fr = new FileReader(filename);
+				BufferedReader br = new BufferedReader(fr);
+				inputFiles.put(startHour, new Pair<FileReader, BufferedReader>(fr, br));
+			}
 			results = new HashMap<String, ArrayList<Double>>();
-			String link = "";
-			int pathN = 100;
-			while ((link = br.readLine()) != null) {
+			int pathN = minPath;
+			while (pathN < maxPath) {
 				pathN++;
-				Util.path = link;
-				Util.pathNumber = Integer.toString(pathN);
-				//Util.Initialize();
-				results.put(Util.path, new ArrayList<Double>());
-				for (int predictionTime : predictionTimes) {
-					for (int startHour : startHours) {
+				for (int startHour : startHours) {
+					Util.path = inputFiles.get(startHour).getSecond().readLine();
+					Util.pathNumber = String.format("%d00%d", startHour, pathN);
+					results.put(Util.pathNumber, new ArrayList<Double>());
+					PathData.LoadEdgePatterns();
+					//Util.Initialize();
+					for (int predictionTime : predictionTimes) {
 						RunExperiment(startHour, PredictionMethod.Historic, predictionTime);
 						System.out.println(String.format("Finished Path%d at startHour %d prediction time %d" , pathN, startHour, predictionTime));
 					}
-				}
-				WriteResultsToFile(results, "results3_links_Historic_discrete.csv");
+					PathData.Reset();
+				}				
 			}
-			br.close();
-			fr.close();
+			WriteResultsToFile(results, String.format("results_%s_%s_Historic_%s.csv", pathType, linkType, distType));
+			for (int startHour : startHours) {
+				inputFiles.get(startHour).getSecond().close();
+				inputFiles.get(startHour).getFirst().close();
+			}
 		}
 		catch (Exception e) {
 			e.printStackTrace();
 		}
+		
 		try {
-			FileReader fr = new FileReader("links.txt");
-			BufferedReader br = new BufferedReader(fr);
+			HashMap<Integer, Pair<FileReader, BufferedReader>> inputFiles = new HashMap<Integer, Pair<FileReader,BufferedReader>>();
+			for (int startHour : startHours) {
+				String filename = String.format("%s_%s%d00.txt", pathType, linkType, startHour);
+				FileReader fr = new FileReader(filename);
+				BufferedReader br = new BufferedReader(fr);
+				inputFiles.put(startHour, new Pair<FileReader, BufferedReader>(fr, br));
+			}
+			double[] simThresholds = new double[] {0.01, 0.02, 0.03, 0.04, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 1};
 			results = new HashMap<String, ArrayList<Double>>();
-			String link = "";
-			int pathN = 100;
-			while ((link = br.readLine()) != null) {
+			int pathN = minPath;
+			while (pathN < maxPath) {
 				pathN++;
-				Util.path = link;
-				Util.pathNumber = Integer.toString(pathN);
-				//Util.Initialize();
-				results.put(Util.path, new ArrayList<Double>());
-				//double[] simThresholds = new double[] {0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 1};
-				double[] simThresholds = new double[] {0.3};
-				for (int predictionTime : predictionTimes) {
-					for (double similarity : simThresholds) {
-						for (int startHour : startHours) {
+				for (int startHour : startHours) {
+					Util.path = inputFiles.get(startHour).getSecond().readLine();
+					Util.pathNumber = String.format("%d00%d", startHour, pathN);
+					results.put(Util.pathNumber, new ArrayList<Double>());
+					PathData.LoadEdgePatterns();
+					//Util.Initialize();
+					for (int predictionTime : predictionTimes) {
+						for (double similarity : simThresholds) {
+							Util.Log(String.format("Path%d at startHour %d with threshold %f and predictionTime %d" , pathN, startHour, similarity, predictionTime));
 							Util.similarityThreshold = similarity;
 							RunExperiment(startHour, PredictionMethod.Filtered, predictionTime);
 							System.out.println(String.format("Finished Path%d at startHour %d with threshold %f and predictionTime %d" , pathN, startHour, similarity, predictionTime));
 						}
 					}
-				}
-				WriteResultsToFile(results, "results3_links_Filtered_discrete.csv");
+					PathData.Reset();
+				}				
 			}
-			br.close();
-			fr.close();
+			WriteResultsToFile(results, String.format("results_%s_%s_Filtered_%s.csv", pathType, linkType, distType));
+			for (int startHour : startHours) {
+				inputFiles.get(startHour).getSecond().close();
+				inputFiles.get(startHour).getFirst().close();
+			}
 		}
 		catch (Exception e) {
 			e.printStackTrace();
-		}*/
+		}
+		
 		try {
-			FileReader fr = new FileReader("links.txt");
-			BufferedReader br = new BufferedReader(fr);
+			HashMap<Integer, Pair<FileReader, BufferedReader>> inputFiles = new HashMap<Integer, Pair<FileReader,BufferedReader>>();
+			for (int startHour : startHours) {
+				String filename = String.format("%s_%s%d00.txt", pathType, linkType, startHour);
+				FileReader fr = new FileReader(filename);
+				BufferedReader br = new BufferedReader(fr);
+				inputFiles.put(startHour, new Pair<FileReader, BufferedReader>(fr, br));
+			}
+			double[] alphas = new double[] {0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1};
 			results = new HashMap<String, ArrayList<Double>>();
-			String link = "";
-			int pathN = 0;
-			while ((link = br.readLine()) != null) {
+			int pathN = minPath;
+			while (pathN < maxPath) {
 				pathN++;
-				Util.path = link;
-				Util.pathNumber = Integer.toString(pathN);
-				//Util.Initialize();
-				results.put(Util.path, new ArrayList<Double>());
-				//int[] timeHorizons = new int[] {10, 15, 20, 25, 30, 40, 50, 60};
-				double[] alphas = new double[] {0, 0.25, 0.5, 0.75, 1};
-				for (int predictionTime : predictionTimes) {
-					/*for (int timeHorizon : timeHorizons) {
-						if (predictionTime <= timeHorizon) { 
-							for (int startHour : startHours) {
-								Util.alpha = 1 - ((double)predictionTime/timeHorizon);
-								if (Util.alpha < 0.0) Util.alpha = 0.0;
-								RunExperiment(startHour, PredictionMethod.Interpolated, predictionTime);
-								System.out.println(String.format("Finished Path%d at startHour %d with timeHorizof %d and predictionTime %d" , pathN, startHour, timeHorizon, predictionTime));
-							}
-						}
-					}*/
-					for (double alpha : alphas) {
-						for (int startHour : startHours) {
+				for (int startHour : startHours) {
+					Util.path = inputFiles.get(startHour).getSecond().readLine();
+					Util.pathNumber = String.format("%d00%d", startHour, pathN);
+					results.put(Util.pathNumber, new ArrayList<Double>());
+					PathData.LoadEdgePatterns();
+					//Util.Initialize();
+					for (int predictionTime : predictionTimes) {
+						for (double alpha : alphas) {
 							Util.alpha = alpha;
+							Util.Log(String.format("Finished Path%d at startHour %d with alpha %f and predictionTime %d" , pathN, startHour, alpha, predictionTime));
 							RunExperiment(startHour, PredictionMethod.Interpolated, predictionTime);
 							System.out.println(String.format("Finished Path%d at startHour %d with alpha %f and predictionTime %d" , pathN, startHour, alpha, predictionTime));
 						}
 					}
-					
-				}
-				WriteResultsToFile(results, "results5_links_Interpolated_discrete.csv");
+					PathData.Reset();
+				}				
 			}
-			br.close();
-			fr.close();
+			WriteResultsToFile(results, String.format("results_%s_%s_Interpolated_%s.csv", pathType, linkType, distType));
+			for (int startHour : startHours) {
+				inputFiles.get(startHour).getSecond().close();
+				inputFiles.get(startHour).getFirst().close();
+			}
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -125,7 +149,6 @@ public class Main {
 	
 	public static void WriteResultsToFile(HashMap<String, ArrayList<Double>> results, String filePath){
 		try {
-			//FileWriter fw = new FileWriter("results_links_Historic_discrete.csv");
 			FileWriter fw = new FileWriter(filePath);
 			BufferedWriter bw = new BufferedWriter(fw);
 			for (Entry<String, ArrayList<Double>> e : results.entrySet()) {
@@ -163,8 +186,6 @@ public class Main {
 			PredictionMethod[] values = new PredictionMethod[] {predMethod};
 			for (PredictionMethod predictionMethod : values ) {
 				Util.predictionMethod = predictionMethod;
-				//FileWriter fw = new FileWriter(String.format("Approach1_%s.txt", predictionMethod.toString()));
-				//BufferedWriter bw = new BufferedWriter(fw);
 				Double totalScore = 0.0;
 				int totalCount = 0;
 				for (int i = 0; i < k; ++i) {
@@ -187,68 +208,58 @@ public class Main {
 						todCal.add(Calendar.MINUTE, predictionTime);
 						String todStr = Util.timeOfDayDF.format(todCal.getTime());
 						modelDist = Approach2.GenerateModel(sensorList, todStr, modelDays, null);
+						if (modelDist == null) continue;
 						for (Calendar startTime : testDays) {
 							Calendar predictionCal = Calendar.getInstance();
 							predictionCal.setTime(startTime.getTime());
 							predictionCal.add(Calendar.MINUTE, predictionTime);
 							actualTime = Approach2.GenerateActual(sensorList, (Calendar)predictionCal.clone());
+							if (actualTime == null) continue;
 							Double score = modelDist.GetScore(actualTime);
 							totalScore += score;
 							totalCount++;
-							//System.out.println(Approach1.GetResults((Calendar)startTime.clone(), actualTime, score));
-							//bw.write(Approach1.GetResults((Calendar)startTime.clone(), actualTime, score));
-							//bw.write("\n");
 						}
 						break;
 					case Filtered:
 						for (Calendar startTime : testDays) {
 							Calendar predictionCal = Calendar.getInstance();
-							//predictionCal.setTime(Util.timeOfDayDF.parse(timeOfDay));
 							predictionCal.setTime(startTime.getTime());
 							predictionCal.add(Calendar.MINUTE, predictionTime);
 							String predictionTOD = Util.timeOfDayDF.format(predictionCal.getTime());
 							ArrayList<Integer> filteredDays = Util.FilterDays(modelDays, sensorList[0], (Calendar)startTime.clone());
-							if (filteredDays.size() > 0)
+							if (filteredDays.size() > 0) {
 								modelDist = Approach2.GenerateModel(sensorList, predictionTOD, filteredDays, null);
+								if (modelDist == null) continue;
+							}
 							else
-								modelDist = Approach2.GenerateModel(sensorList, predictionTOD, modelDays, null);
+								continue;
 							actualTime = Approach2.GenerateActual(sensorList, (Calendar)predictionCal.clone());
+							if (actualTime == null) continue;
 							Double score = modelDist.GetScore(actualTime);
 							totalScore += score;
 							totalCount++;
-							//System.out.println(Approach1.GetResults((Calendar)startTime.clone(), actualTime, score));
-							//bw.write(Approach1.GetResults((Calendar)startTime.clone(), actualTime, score));
-							//bw.write("\n");
 						}
 						break;
 					case Interpolated:
 						for (Calendar startTime : testDays) {
 							Calendar predictionCal = Calendar.getInstance();
-							//predictionCal.setTime(Util.timeOfDayDF.parse(timeOfDay));
 							predictionCal.setTime(startTime.getTime());
 							predictionCal.add(Calendar.MINUTE, predictionTime);
 							String predictionTOD = Util.timeOfDayDF.format(predictionCal.getTime());
-							String temp = Util.oracleDF.format(startTime.getTime());
-							String temp2 = Util.oracleDF.format(predictionCal.getTime());
 							modelDist = Approach2.GenerateModel(sensorList, predictionTOD, modelDays, (Calendar)startTime.clone());
+							if (modelDist == null) continue;
 							actualTime = Approach2.GenerateActual(sensorList, (Calendar)predictionCal.clone());
+							if (actualTime == null) continue;
 							Double score = modelDist.GetScore(actualTime);
 							totalScore += score;
 							totalCount++;
-							//System.out.println(Approach1.GetResults((Calendar)startTime.clone(), actualTime, score));
-							//bw.write(Approach1.GetResults((Calendar)startTime.clone(), actualTime, score));
-							//bw.write("\n");
 						}
 						break;
 					default:
 						break;
 					}
 				}
-				//System.out.println(String.format("\n\nTotal Score for Approach1 %s: %f\n\n", predictionMethod, totalScore/totalCount));
-				//bw.write(String.format("\n\nTotal Score for Approach1 %s: %f\n\n", predictionMethod, totalScore/totalCount));
-				//bw.close();
-				//fw.close();
-				results.get(Util.path).add(totalScore/totalCount);
+				results.get(Util.pathNumber).add(totalScore/totalCount);
 			}
 					}
 		catch (Exception e) {

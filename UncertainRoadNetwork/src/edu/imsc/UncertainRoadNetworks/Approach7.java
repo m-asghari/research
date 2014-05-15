@@ -14,11 +14,9 @@ import edu.imsc.UncertainRoadNetworks.Util.PredictionMethod;
 // 1 & True -> Congested
 public class Approach7 {
 	
-	public static PMF GenerateModel(String[] sensorList, String timeOfDay, 
+	public static PMF GenerateModel(String[] sensorList, String tod, 
 			ArrayList<Integer> days, Calendar startTime) throws SQLException, ParseException{		
-		Calendar tod = Calendar.getInstance();
-		tod.setTime(Util.timeOfDayDF.parse(timeOfDay));
-		
+				
 		PMF congPMF = Util.getPMF(sensorList[0], tod, days, true);
 		PMF normPMF = Util.getPMF(sensorList[0], tod, days, false);
 		for (int s = 1; s < sensorList.length - 1; ++s) {
@@ -31,16 +29,18 @@ public class Approach7 {
 			HashMap<Integer, PMF> edgeCongPMFs = new HashMap<Integer, PMF>();
 			ArrayList<Double> transitionProbs = Util.congChangeProb.get(new Pair<String, String>(prev, from));
 			for (int i = prevMin; i <= prevMax; ++i) {
-				Calendar time = Calendar.getInstance();
-				time.setTime(Util.timeOfDayDF.parse(timeOfDay));
-				time.add(Calendar.MINUTE, i);
+				Calendar cal = Calendar.getInstance();
+				cal.setTime(Util.timeOfDayDF.parse(tod));
+				cal.add(Calendar.MINUTE, i);
+				String time = Util.timeOfDayDF.format(cal.getTime());
 				PMF edgeNormPMF = Util.getPMF(from, time, days, false);
 				PMF edgeCongPMF = Util.getPMF(from, time, days, true);
 				if (Util.predictionMethod == PredictionMethod.Interpolated) {
-					if (currTravelTime != 0.0) {
-						edgeNormPMF = edgeNormPMF.Interpolate(currTravelTime, (Util.timeHorizon - prevMin - i)/Util.timeHorizon);
-						edgeCongPMF = edgeCongPMF.Interpolate(currTravelTime, (Util.timeHorizon - prevMin - i)/Util.timeHorizon);
+					if (currTravelTime == null) {
+						return null;
 					}
+					edgeNormPMF = edgeNormPMF.Interpolate(currTravelTime, (Util.timeHorizon - prevMin - i)/Util.timeHorizon);
+					edgeCongPMF = edgeCongPMF.Interpolate(currTravelTime, (Util.timeHorizon - prevMin - i)/Util.timeHorizon);
 				}
 				edgeNormPMFs.put(i, Util.getPMF(from, time, days, false));
 				edgeCongPMFs.put(i, Util.getPMF(from, time, days, true));
@@ -68,6 +68,7 @@ public class Approach7 {
 			newNormPMF.Adjust();
 			normPMF = newNormPMF;
 		}
+		//Rewrite using PathData
 		String lastEdge = sensorList[sensorList.length - 2];
 		Pair<Double, Double> probs = GenerateLinkCorrelations.GetLinkCongestion(lastEdge);
 		Double normProb = probs.getFirst(), congProb = probs.getSecond();

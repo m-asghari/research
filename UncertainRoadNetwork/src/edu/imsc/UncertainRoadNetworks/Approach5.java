@@ -13,17 +13,19 @@ import edu.imsc.UncertainRoadNetworks.Util.PredictionMethod;
 
 public class Approach5 {
 	
-	public static NormalDist GenerateModel(String[] sensorList, String timeOfDay, 
+	public static NormalDist GenerateModel(String[] sensorList, String tod, 
 			ArrayList<Integer> days, Calendar startTime) throws SQLException, ParseException {
-		Calendar tod = Calendar.getInstance();
-		tod.setTime(Util.timeOfDayDF.parse(timeOfDay));
+		//Calendar tod = Calendar.getInstance();
+		//tod.setTime(Util.timeOfDayDF.parse(timeOfDay));
 		
 		HashMap<String, ArrayList<Double>> allTravelTimes = new HashMap<String, ArrayList<Double>>();
 		 
 		for (int s = 0; s < sensorList.length - 1; ++s) {
 			String from = sensorList[s];
-			//ArrayList<Double> travelTimes = Util.getTravelTimes(pathNumber, from, tod, days);
-			allTravelTimes.put(from, Util.getTravelTimes(from, tod, days));
+			ArrayList<Double> travelTimes = PathData.GetTravelTimes(from, tod, days, null);
+			if (travelTimes.size() == 0)
+				return null;
+			allTravelTimes.put(from, travelTimes);
 		}
 		
 		NormalDist retDist = new NormalDist(0, 0);
@@ -33,8 +35,8 @@ public class Approach5 {
 			NormalDist edgeDist = new NormalDist(travelTimes);
 			if (Util.predictionMethod == PredictionMethod.Interpolated) {
 				Double actualTravelTime = Util.GetActualTravelTime(from, (Calendar)startTime.clone());
-				if (actualTravelTime != 0.0)
-					edgeDist = edgeDist.Interpolate(actualTravelTime, Util.alpha);
+				if (actualTravelTime == null)
+					return null;
 			}
 			retDist.mean += edgeDist.mean;
 			retDist.var += edgeDist.var;
@@ -48,18 +50,14 @@ public class Approach5 {
 		return retDist;
 	}
 	
-	public static NormalDist GenerateActual(String[] sensorList, 
-			ArrayList<Calendar> startTimes) throws SQLException, ParseException {
-		ArrayList<Double> travelTimes = SpeedUp.TimeInependentTravelTime(sensorList, startTimes);
-		NormalDist retDist = new NormalDist(travelTimes);
-		return retDist;
-	}
-	
 	public static Double GenerateActual(String[] sensorList,
 			Calendar startTime) throws SQLException, ParseException {
-		ArrayList<Calendar> temp = new ArrayList<Calendar>();
-		temp.add(startTime);
-		return SpeedUp.TimeInependentTravelTime(sensorList, temp).get(0);
+		return Util.GetActualTravelTime(sensorList, startTime);
 	}
-
+	
+	public static String GetResults(Calendar startTime, NormalDist modelDist, Double actualTime, Double score) {
+		String retStr = String.format("Start Time: %s, Model Distribution: %s, Actual Time: %f, Score: %f",
+				Util.oracleDF.format(startTime.getTime()), modelDist.toString(), actualTime, score);
+		return retStr;
+	}
 }

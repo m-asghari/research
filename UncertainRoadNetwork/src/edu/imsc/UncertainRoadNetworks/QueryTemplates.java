@@ -38,6 +38,9 @@ public class QueryTemplates {
 	public static String pearsonQuery = readQuery("QueryTemplates\\PearsonQuery.sql");
 	public static String edgeDistanceQuery = readQuery("QueryTemplates\\SelectEdgeDistance.sql");
 	
+	//PathData
+	public static String edgePatternsQuery = readQuery("QueryTemplates\\PathData\\SelectEdgePatterns.sql");
+	
 	//SpeedUp.java
 	public static String sensorSpeedsQuery = readQuery("QueryTemplates\\SelectSensorSpeeds.sql");
 	public static String sensorAvgSpeedQuery = readQuery("QueryTemplates\\SelectSensorAvgSpeed.sql");
@@ -55,6 +58,7 @@ public class QueryTemplates {
 	public static String insertEdgeInfo = readQuery("QueryTemplates\\DataPreparation\\InsertEdgeInfo.sql");
 	public static String pathPatterns = readQuery("QueryTemplates\\DataPreparation\\PathPatterns.sql");
 	public static String updateTT = readQuery("QueryTemplates\\DataPreparation\\UpdateTravelTimes.sql");
+	public static String dropPath = readQuery("QueryTemplates\\DataPreparation\\DropPath.sql");
 	
 	//GenerateLinkCorrelations.java
 	public static String createLinkCorr = readQuery("QueryTemplates\\LinkCorrelations\\CreateTable.sql");
