@@ -19,6 +19,7 @@ public class Main {
 	public static HashMap<String, ArrayList<Double>> results;
 	
 	public static void main(String[] args) {
+
 		pathNums.put(new Pair<String, String>("p", "links"), new Pair<Integer, Integer>(0, 50));
 		pathNums.put(new Pair<String, String>("r", "links"), new Pair<Integer, Integer>(50, 100));
 		pathNums.put(new Pair<String, String>("p", "paths"), new Pair<Integer, Integer>(100, 110));
