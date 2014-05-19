@@ -13,10 +13,13 @@ public class Approach2 {
 	
 	public static PMF GenerateModel(String[] sensorList, String timeOfDay, 
 			ArrayList<Integer> days, Calendar startTime) throws SQLException, ParseException{
+		Calendar startCal1, startCal2, endCal1, endCal2;
+		long p_PassedMillis = 0, l_passedMillis = 0, pl_passedMillis = 0;
 		
 		PMF retPMF = new PMF();
 		for (int s = 0; s < sensorList.length - 1; ++s) {
 			String from = sensorList[s];
+			startCal1 = Calendar.getInstance();
 			PMF edgePMF = Util.getPMF(from, timeOfDay, days, null);
 			if (edgePMF == null)
 				return null;
@@ -26,7 +29,9 @@ public class Approach2 {
 					return null;
 				edgePMF = edgePMF.Interpolate(actualTime, Util.alpha);
 			}
+			endCal1 = Calendar.getInstance();
 			PMF newPMF = new PMF(retPMF.min + edgePMF.min, retPMF.max + edgePMF.max);
+			startCal2 = Calendar.getInstance();
 			for (int b = newPMF.min; b <= newPMF.max; b+=PMF.binWidth) {
 				Double sum = 0.0;
 				for (int h = retPMF.min; h <= retPMF.max && h <= b; h+=PMF.binWidth) {
@@ -36,7 +41,14 @@ public class Approach2 {
 			}
 			newPMF.Adjust();
 			retPMF = newPMF;
+			endCal2 = Calendar.getInstance();
+			p_PassedMillis += endCal2.getTimeInMillis() - startCal2.getTimeInMillis();
+			l_passedMillis += endCal1.getTimeInMillis() - startCal1.getTimeInMillis();
+			pl_passedMillis += endCal2.getTimeInMillis() - startCal1.getTimeInMillis();
 		}
+		Util.p_passedMillis += p_PassedMillis; Util.p_timeCounter++;
+		Util.l_passedMillis += l_passedMillis; Util.l_timeCounter++;
+		Util.pl_passedMillis += pl_passedMillis; Util.pl_timeCounter++;
 		return retPMF;
 	}
 	

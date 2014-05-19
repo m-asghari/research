@@ -25,6 +25,9 @@ public class Util {
 	private static final String password = "phe334";
 	public static final OracleConnection conn = getConnection();
 	
+	public static long p_passedMillis, l_passedMillis, pl_passedMillis;
+	public static int p_timeCounter, l_timeCounter, pl_timeCounter;
+	
 	public static String path = "";
 	public static String pathNumber = "";
 	
@@ -240,6 +243,7 @@ public class Util {
 		int size = (input.size() == 0) ? 1 : input.size();
 		return sum/size;
 	}
+	
 
 	/*public static void Initialize() {
 		pearsonCorrCoef = PearsonCorrCoef();

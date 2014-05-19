@@ -26,12 +26,15 @@ public class Main {
 		pathNums.put(new Pair<String, String>("r", "paths"), new Pair<Integer, Integer>(110, 120));
 		String linkType = "r";
 		String pathType = "paths";
-		String distType = "discrete_Approach2";
+		String distType = "continuous_Approach1";
 		int minPath = pathNums.get(new Pair<String, String>(linkType, pathType)).getFirst();
 		int maxPath = pathNums.get(new Pair<String, String>(linkType, pathType)).getSecond();
 		int[] startHours = new int[] {7, 8, 15, 16, 17};
 		int[] predictionTimes = new int[] {5, 10, 15, 30, 60, 90, 120, 150, 180, 210, 240};
 		
+		
+		Util.p_passedMillis = 0; Util.l_passedMillis = 0; Util.pl_passedMillis = 0;
+		Util.p_timeCounter = 0; Util.l_timeCounter = 0; Util.pl_timeCounter = 0;
 		try {
 			HashMap<Integer, Pair<FileReader, BufferedReader>> inputFiles = new HashMap<Integer, Pair<FileReader,BufferedReader>>();
 			for (int startHour : startHours) {
@@ -67,6 +70,8 @@ public class Main {
 			e.printStackTrace();
 		}
 		
+		Util.p_passedMillis = 0; Util.l_passedMillis = 0; Util.pl_passedMillis = 0;
+		Util.p_timeCounter = 0; Util.l_timeCounter = 0; Util.pl_timeCounter = 0;
 		try {
 			HashMap<Integer, Pair<FileReader, BufferedReader>> inputFiles = new HashMap<Integer, Pair<FileReader,BufferedReader>>();
 			for (int startHour : startHours) {
@@ -107,6 +112,8 @@ public class Main {
 			e.printStackTrace();
 		}
 		
+		Util.p_passedMillis = 0; Util.l_passedMillis = 0; Util.pl_passedMillis = 0;
+		Util.p_timeCounter = 0; Util.l_timeCounter = 0; Util.pl_timeCounter = 0;
 		try {
 			HashMap<Integer, Pair<FileReader, BufferedReader>> inputFiles = new HashMap<Integer, Pair<FileReader,BufferedReader>>();
 			for (int startHour : startHours) {
@@ -166,6 +173,19 @@ public class Main {
 			}
 			bw.close();
 			fw.close();
+			double p_computationTime = ((double)Util.p_passedMillis)/Util.p_timeCounter;
+			double l_computationTime = ((double)Util.l_passedMillis)/Util.l_timeCounter;
+			double pl_computationTime = ((double)Util.pl_passedMillis)/Util.pl_timeCounter;
+			fw = new FileWriter(filePath.replace("results", "stats"));
+			bw = new BufferedWriter(fw);
+			bw.write(String.format("p_passedMillis: %d, p_timeCounter: %d, p_computationTime: %f", Util.p_passedMillis, Util.p_timeCounter, p_computationTime));
+			bw.write("\n");
+			bw.write(String.format("l_passedMillis: %d, l_timeCounter: %d, l_computationTime: %f", Util.l_passedMillis, Util.l_timeCounter, l_computationTime));
+			bw.write("\n");
+			bw.write(String.format("pl_passedMillis: %d, pl_timeCounter: %d, pl_computationTime: %f", Util.pl_passedMillis, Util.pl_timeCounter, pl_computationTime));
+			bw.write("\n");
+			bw.close();
+			fw.close();
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -205,7 +225,7 @@ public class Main {
 									modelDays.add(allStartTimes.get(l).get(j).get(Calendar.DAY_OF_YEAR));
 						}
 					}
-					PMF modelDist;
+					NormalDist modelDist;
 					Double actualTime;
 					switch (Util.predictionMethod) {
 					case Historic:
@@ -213,13 +233,13 @@ public class Main {
 						todCal.setTime(Util.timeOfDayDF.parse(timeOfDay));
 						todCal.add(Calendar.MINUTE, predictionTime);
 						String todStr = Util.timeOfDayDF.format(todCal.getTime());
-						modelDist = Approach2.GenerateModel(sensorList, todStr, modelDays, null);
+						modelDist = Approach1.GenerateModel(sensorList, todStr, modelDays, null);
 						if (modelDist == null) continue;
 						for (Calendar startTime : testDays) {
 							Calendar predictionCal = Calendar.getInstance();
 							predictionCal.setTime(startTime.getTime());
 							predictionCal.add(Calendar.MINUTE, predictionTime);
-							actualTime = Approach2.GenerateActual(sensorList, (Calendar)predictionCal.clone());
+							actualTime = Approach1.GenerateActual(sensorList, (Calendar)predictionCal.clone());
 							if (actualTime == null) continue;
 							Double score = modelDist.GetScore(actualTime);
 							totalScore += score;
@@ -234,12 +254,12 @@ public class Main {
 							String predictionTOD = Util.timeOfDayDF.format(predictionCal.getTime());
 							ArrayList<Integer> filteredDays = Util.FilterDays(modelDays, sensorList[0], (Calendar)startTime.clone());
 							if (filteredDays.size() > 0) {
-								modelDist = Approach2.GenerateModel(sensorList, predictionTOD, filteredDays, null);
+								modelDist = Approach1.GenerateModel(sensorList, predictionTOD, filteredDays, null);
 								if (modelDist == null) continue;
 							}
 							else
 								continue;
-							actualTime = Approach2.GenerateActual(sensorList, (Calendar)predictionCal.clone());
+							actualTime = Approach1.GenerateActual(sensorList, (Calendar)predictionCal.clone());
 							if (actualTime == null) continue;
 							Double score = modelDist.GetScore(actualTime);
 							totalScore += score;
@@ -252,9 +272,9 @@ public class Main {
 							predictionCal.setTime(startTime.getTime());
 							predictionCal.add(Calendar.MINUTE, predictionTime);
 							String predictionTOD = Util.timeOfDayDF.format(predictionCal.getTime());
-							modelDist = Approach2.GenerateModel(sensorList, predictionTOD, modelDays, (Calendar)startTime.clone());
+							modelDist = Approach1.GenerateModel(sensorList, predictionTOD, modelDays, (Calendar)startTime.clone());
 							if (modelDist == null) continue;
-							actualTime = Approach2.GenerateActual(sensorList, (Calendar)predictionCal.clone());
+							actualTime = Approach1.GenerateActual(sensorList, (Calendar)predictionCal.clone());
 							if (actualTime == null) continue;
 							Double score = modelDist.GetScore(actualTime);
 							totalScore += score;

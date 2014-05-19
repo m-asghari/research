@@ -13,10 +13,13 @@ public class Approach1 {
 	
 	public static NormalDist GenerateModel(String[] sensorList, String timeOfDay,
 			ArrayList<Integer> days, Calendar startTime) throws SQLException, ParseException{
+		Calendar startCal1, startCal2, endCal1, endCal2;
+		long p_PassedMillis = 0, l_passedMillis = 0, pl_passedMillis = 0;
 		
 		NormalDist retDist = new NormalDist(0, 0);
 		for (int s = 0; s < sensorList.length - 1; ++s) {
 			String from = sensorList[s];
+			startCal1 = Calendar.getInstance();
 			NormalDist edgeDist = Util.getNormalDist(from, timeOfDay, days);
 			if (edgeDist == null)
 				return null;
@@ -26,9 +29,18 @@ public class Approach1 {
 					return null;
 				edgeDist = edgeDist.Interpolate(actualTravelTime, Util.alpha);
 			}
+			endCal1 = Calendar.getInstance();
+			startCal2 = Calendar.getInstance();
 			retDist.mean += edgeDist.mean;
 			retDist.var += edgeDist.var;
+			endCal2 = Calendar.getInstance();
+			p_PassedMillis += endCal2.getTimeInMillis() - startCal2.getTimeInMillis();
+			l_passedMillis += endCal1.getTimeInMillis() - startCal1.getTimeInMillis();
+			pl_passedMillis += endCal2.getTimeInMillis() - startCal1.getTimeInMillis();
 		}
+		Util.p_passedMillis += p_PassedMillis; Util.p_timeCounter++;
+		Util.l_passedMillis += l_passedMillis; Util.l_timeCounter++;
+		Util.pl_passedMillis += pl_passedMillis; Util.pl_timeCounter++;
 		return retDist;
 	}
 
