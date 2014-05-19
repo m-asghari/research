@@ -36,8 +36,8 @@ public class Util {
 	
 	public static Double maxSpeed = 65.0;
 	
-	public static HashMap<Pair<String, String>, Double> pearsonCorrCoef;
-	public static HashMap<Pair<String, String>, ArrayList<Double>> congChangeProb;
+	//public static HashMap<Pair<String, String>, Double> pearsonCorrCoef;
+	//public static HashMap<Pair<String, String>, ArrayList<Double>> congChangeProb;
 	public static final int f2f = 0;
 	public static final int f2t = 1;
 	public static final int t2f = 2;
@@ -45,11 +45,6 @@ public class Util {
 	
 	public static DateFormat oracleDF = new SimpleDateFormat("dd-MMM-yy hh.mm.ss.SSS a");
 	public static DateFormat timeOfDayDF = new SimpleDateFormat("HH:mm");
-	
-	public static void Initialize() {
-		pearsonCorrCoef = PearsonCorrCoef();
-		congChangeProb = CongChageProbs();
-	}
 	
 	private static OracleConnection getConnection()
 	{
@@ -237,7 +232,20 @@ public class Util {
 		input.set(Calendar.SECOND, 0);
 		return input;
 	}
+	
+	public static Double GetMean(ArrayList<Double> input) {
+		Double sum = 0.0;
+		for (Double d : input)
+			sum += d;
+		int size = (input.size() == 0) ? 1 : input.size();
+		return sum/size;
+	}
 
+	/*public static void Initialize() {
+		pearsonCorrCoef = PearsonCorrCoef();
+		congChangeProb = CongChageProbs();
+	}
+	
 	public static HashMap<Pair<String, String>, Double> PearsonCorrCoef() {
 		HashMap<Pair<String, String>, Double> retMap = new HashMap<Pair<String,String>, Double>();
 		
@@ -285,15 +293,7 @@ public class Util {
 			e.printStackTrace();
 		}
 		return retMap;
-	}
-	
-	public static Double GetMean(ArrayList<Double> input) {
-		Double sum = 0.0;
-		for (Double d : input)
-			sum += d;
-		int size = (input.size() == 0) ? 1 : input.size();
-		return sum/size;
-	}
+	}*/
 	
 	//Deprecated
 	/*public static PMF getPMF(String from, Calendar time,

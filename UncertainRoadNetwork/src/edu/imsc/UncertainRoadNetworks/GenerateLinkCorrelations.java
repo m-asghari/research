@@ -15,21 +15,42 @@ public class GenerateLinkCorrelations {
 	private static Pair<Integer, Integer> f2tPair = new Pair<Integer, Integer>(0, 1);
 	private static Pair<Integer, Integer> t2fPair = new Pair<Integer, Integer>(1, 0);
 	private static Pair<Integer, Integer> t2tPair = new Pair<Integer, Integer>(1, 1);
+	
+	private static HashMap<Pair<String, String>, Pair<Integer, Integer>> pathNums = new HashMap<Pair<String,String>, Pair<Integer,Integer>>();
+	
 
 	public static void main(String[] args) {
+		pathNums.put(new Pair<String, String>("p", "links"), new Pair<Integer, Integer>(0, 50));
+		pathNums.put(new Pair<String, String>("r", "links"), new Pair<Integer, Integer>(50, 100));
+		pathNums.put(new Pair<String, String>("p", "paths"), new Pair<Integer, Integer>(100, 110));
+		pathNums.put(new Pair<String, String>("r", "paths"), new Pair<Integer, Integer>(110, 120));
+		String linkType = "r";
+		String pathType = "paths";
+		int[] startHours = new int[] {7, 8, 15, 16, 17};
+		
+		int minPath = pathNums.get(new Pair<String, String>(linkType, pathType)).getFirst();
+		int maxPath = pathNums.get(new Pair<String, String>(linkType, pathType)).getSecond();
 		try {
-			FileReader fr = new FileReader("paths.txt");	
-			BufferedReader br = new BufferedReader(fr);
-			String link = br.readLine();
-			int pathN = 101;
-			while ((link = br.readLine()) != null) {
-				pathN++;
-				Util.path = link;
-				Util.pathNumber = Integer.toString(pathN);
-				GenerateForPath();
+			HashMap<Integer, Pair<FileReader, BufferedReader>> inputFiles = new HashMap<Integer, Pair<FileReader,BufferedReader>>();
+			for (int startHour : startHours) {
+				String filename = String.format("%s_%s%d00.txt", pathType, linkType, startHour);
+				FileReader fr = new FileReader(filename);
+				BufferedReader br = new BufferedReader(fr);
+				inputFiles.put(startHour, new Pair<FileReader, BufferedReader>(fr, br));
 			}
-			br.close();
-			fr.close();
+			int pathN = minPath;
+			while (pathN < maxPath) {
+				pathN++;
+				for (int startHour : startHours) {
+					Util.path = inputFiles.get(startHour).getSecond().readLine();
+					Util.pathNumber = String.format("%d00%d", startHour, pathN);
+					GenerateForPath();
+				}
+			}
+			for (int startHour : startHours) {
+				inputFiles.get(startHour).getSecond().close();
+				inputFiles.get(startHour).getFirst().close();
+			}
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -112,7 +133,7 @@ public class GenerateLinkCorrelations {
 		return sum/(size - 1);
 	}
 
-	public static void CreateTable() throws SQLException{
+	private static void CreateTable() throws SQLException{
 		Statement stm = Util.conn.createStatement();
 		String query = QueryTemplates.createLinkCorr
 				.replace("##PATH_NUM##", Util.pathNumber);
@@ -173,7 +194,7 @@ public class GenerateLinkCorrelations {
 		stm.close();		
 	}
 	
-	public static Pair<Double, Double> GetLinkCongestion(String from) throws SQLException{
+	/*public static Pair<Double, Double> GetLinkCongestion(String from) throws SQLException{
 		Pair<Double, Double> retVal = new Pair<Double, Double>(0.0, 0.0);
 		Double cong = 0.0, norm = 0.0;
 		
@@ -195,5 +216,5 @@ public class GenerateLinkCorrelations {
 		retVal.setFirst(norm/sum);
 		retVal.setSecond(cong/sum);
 		return retVal;
-	}
+	}*/
 }

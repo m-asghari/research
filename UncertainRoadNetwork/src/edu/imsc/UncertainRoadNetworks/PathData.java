@@ -8,12 +8,17 @@ import java.util.Map.Entry;
 import oracle.jdbc.driver.OracleResultSet;
 
 public class PathData {
-	public static HashMap<String, HashMap<Integer, HashMap<String, Pair<Double, Boolean>>>> edgePatterns = new 
+	private static HashMap<String, HashMap<Integer, HashMap<String, Pair<Double, Boolean>>>> edgePatterns = new 
 			HashMap<String, HashMap<Integer,HashMap<String,Pair<Double,Boolean>>>>();
+	
+	private static HashMap<Pair<String, String>, Double> pearsonCorrs = new HashMap<Pair<String,String>, Double>(); 
+	
+	private static HashMap<Pair<String, String>, ArrayList<Double>> congTrans = new HashMap<Pair<String,String>, ArrayList<Double>>();
 	
 
 	public static void main(String[] args) {
-		LoadEdgePatterns();		
+		LoadEdgePatterns();
+		LoadEdgeCorrelations();
 	}
 	
 	public static void LoadEdgePatterns() {
@@ -39,16 +44,56 @@ public class PathData {
 			}
 			ors.close();
 			stm.close();
-			//Print();
 		}
 		catch (Exception e){
-			Util.Log(e.getMessage());
+			e.printStackTrace();
+		}
+	}
+	
+	public static void LoadEdgeCorrelations() {
+		try {
+			Statement stm = Util.conn.createStatement();
+			String query = QueryTemplates.edgeDisCorrQuery
+					.replace("##PATH_NUM##", Util.pathNumber);
+			
+			OracleResultSet ors = (OracleResultSet) stm.executeQuery(query);
+			while (ors.next()) {
+				String from = ors.getString(1);
+				String to = ors.getString(2);
+				Pair<String, String> ft = new Pair<String, String>(from, to);
+				ArrayList<Double> trans = new ArrayList<Double>();
+				trans.add(ors.getDouble(3));
+				trans.add(ors.getDouble(4));
+				trans.add(ors.getDouble(5));
+				trans.add(ors.getDouble(6));
+				congTrans.put(ft, trans);
+			}
+			ors.close();
+			
+			query = QueryTemplates.edgeConCorrQuery
+					.replace("##PATH_NUM##", Util.pathNumber);
+			ors = (OracleResultSet) stm.executeQuery(query);
+			while (ors.next()) {
+				String from = ors.getString(1);
+				String to = ors.getString(2);
+				Pair<String, String> ft = new Pair<String, String>(from, to);
+				Pair<String, String> tf = new Pair<String, String>(to, from);
+				Double pCorr = ors.getDouble(3);
+				pearsonCorrs.put(ft, pCorr);
+				pearsonCorrs.put(tf, pCorr);
+			}
+			ors.close();
+			stm.close();
+		}
+		catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 	
 	public static void Reset() {
 		edgePatterns = new HashMap<String, HashMap<Integer,HashMap<String,Pair<Double,Boolean>>>>();
+		pearsonCorrs = new HashMap<Pair<String,String>, Double>();
+		congTrans = new HashMap<Pair<String,String>, ArrayList<Double>>();
 	}
 	
 	@SuppressWarnings("unused")
@@ -68,6 +113,48 @@ public class PathData {
 			return pattern;
 		}
 		catch (NullPointerException npe){
+			return null;
+		}
+	}
+	
+	public static Double GetPearsonCorr(String from, String to) {
+		try {
+			Double pCorr = pearsonCorrs.get(new Pair<String, String>(from, to));
+			return pCorr;
+		}
+		catch (NullPointerException npe){
+			return null;
+		}
+	}
+	
+	public static ArrayList<Double> GetCongTrans(String from, String to) {
+		try {
+			ArrayList<Double> trans = congTrans.get(new Pair<String, String>(from, to));
+			return trans;
+		}
+		catch (NullPointerException npe){
+			return null;
+		}
+	}
+	
+	public static Pair<Double, Double> GetLinkCongestion(String from) {
+		Double congCtr = 0.0, normCtr = 0.0;
+		try {
+			for (HashMap<String,Pair<Double,Boolean>> patterns : edgePatterns.get(from).values())
+				for (Pair<Double, Boolean> pattern : patterns.values()) {
+					if (pattern.getSecond())
+						congCtr++;
+					else
+						normCtr++;
+				}
+			Double congProb = 0.0, normProb = 0.0;
+			if (congCtr + normCtr > 0) {
+				congProb = congCtr / (congCtr + normCtr);
+				normProb = normCtr / (congCtr + normCtr);
+			}
+			return new Pair<Double, Double>(normProb, congProb);
+		}
+		catch (NullPointerException nep) {
 			return null;
 		}
 	}

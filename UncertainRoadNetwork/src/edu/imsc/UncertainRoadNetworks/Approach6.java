@@ -22,7 +22,8 @@ public class Approach6 {
 		for (int s = 1; s < sensorList.length - 1; ++s) {
 			String prev = sensorList[s-1];
 			String from = sensorList[s];
-			ArrayList<Double> transitionProb = Util.congChangeProb.get(new Pair<String, String>(prev, from));
+			//ArrayList<Double> transitionProb = Util.congChangeProb.get(new Pair<String, String>(prev, from));
+			ArrayList<Double> transitionProb = PathData.GetCongTrans(prev, from);
 			PMF edgeCongPMF = Util.getPMF(from, tod, days, true);
 			PMF edgeNormPMF = Util.getPMF(from, tod, days, false);
 			if (Util.predictionMethod == PredictionMethod.Interpolated) {
@@ -60,8 +61,8 @@ public class Approach6 {
 		}
 		//Rewrinte using PathData
 		String lastEdge = sensorList[sensorList.length - 2];
-		Pair<Double, Double> probs = GenerateLinkCorrelations.GetLinkCongestion(lastEdge);
-		Double normProb = probs.getFirst(), congProb = probs.getSecond();
+		Pair<Double, Double> probs = PathData.GetLinkCongestion(lastEdge);
+		Double normProb = probs.getSecond(), congProb = probs.getFirst();
 		int min = Math.min(normPMF.min, congPMF.min);
 		int max = Math.max(normPMF.max, congPMF.max);
 		PMF retPMF = new PMF(min, max);

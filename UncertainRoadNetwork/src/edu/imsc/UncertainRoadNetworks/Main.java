@@ -25,12 +25,12 @@ public class Main {
 		pathNums.put(new Pair<String, String>("p", "paths"), new Pair<Integer, Integer>(100, 110));
 		pathNums.put(new Pair<String, String>("r", "paths"), new Pair<Integer, Integer>(110, 120));
 		String linkType = "r";
-		String pathType = "links";
-		String distType = "continuous";
+		String pathType = "paths";
+		String distType = "discrete_Approach2";
 		int minPath = pathNums.get(new Pair<String, String>(linkType, pathType)).getFirst();
 		int maxPath = pathNums.get(new Pair<String, String>(linkType, pathType)).getSecond();
 		int[] startHours = new int[] {7, 8, 15, 16, 17};
-		int[] predictionTimes = new int[] {5, 10, 15, 30, 60, 90, 120};
+		int[] predictionTimes = new int[] {5, 10, 15, 30, 60, 90, 120, 150, 180, 210, 240};
 		
 		try {
 			HashMap<Integer, Pair<FileReader, BufferedReader>> inputFiles = new HashMap<Integer, Pair<FileReader,BufferedReader>>();
@@ -87,12 +87,12 @@ public class Main {
 					PathData.LoadEdgePatterns();
 					//Util.Initialize();
 					for (int predictionTime : predictionTimes) {
-						for (double similarity : simThresholds) {
-							Util.Log(String.format("Path%d at startHour %d with threshold %f and predictionTime %d" , pathN, startHour, similarity, predictionTime));
+						Double similarity = 0.2;
+						//for (double similarity : simThresholds) {
 							Util.similarityThreshold = similarity;
 							RunExperiment(startHour, PredictionMethod.Filtered, predictionTime);
 							System.out.println(String.format("Finished Path%d at startHour %d with threshold %f and predictionTime %d" , pathN, startHour, similarity, predictionTime));
-						}
+						//}
 					}
 					PathData.Reset();
 				}				
@@ -127,12 +127,17 @@ public class Main {
 					PathData.LoadEdgePatterns();
 					//Util.Initialize();
 					for (int predictionTime : predictionTimes) {
-						for (double alpha : alphas) {
+						/*for (double alpha : alphas) {
 							Util.alpha = alpha;
 							Util.Log(String.format("Finished Path%d at startHour %d with alpha %f and predictionTime %d" , pathN, startHour, alpha, predictionTime));
 							RunExperiment(startHour, PredictionMethod.Interpolated, predictionTime);
 							System.out.println(String.format("Finished Path%d at startHour %d with alpha %f and predictionTime %d" , pathN, startHour, alpha, predictionTime));
-						}
+						}*/
+						Double alpha = (60.0 - predictionTime) / 60.0;
+						if (alpha < 0.0) alpha = 0.0;
+						Util.alpha = alpha;
+						RunExperiment(startHour, PredictionMethod.Interpolated, predictionTime);
+						System.out.println(String.format("Finished Path%d at startHour %d with alpha %f and predictionTime %d" , pathN, startHour, alpha, predictionTime));
 					}
 					PathData.Reset();
 				}				

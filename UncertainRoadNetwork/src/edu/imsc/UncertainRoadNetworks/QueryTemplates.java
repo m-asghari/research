@@ -40,6 +40,8 @@ public class QueryTemplates {
 	
 	//PathData
 	public static String edgePatternsQuery = readQuery("QueryTemplates\\PathData\\SelectEdgePatterns.sql");
+	public static String edgeConCorrQuery = readQuery("QueryTemplates\\PathData\\SelectEdgeConCorr.sql");
+	public static String edgeDisCorrQuery = readQuery("QueryTemplates\\PathData\\SelectEdgeDisCorr.sql");
 	
 	//SpeedUp.java
 	public static String sensorSpeedsQuery = readQuery("QueryTemplates\\SelectSensorSpeeds.sql");

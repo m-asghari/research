@@ -27,7 +27,8 @@ public class Approach7 {
 			int prevMax = Math.max(congPMF.max, normPMF.max);
 			HashMap<Integer, PMF> edgeNormPMFs = new HashMap<Integer, PMF>();
 			HashMap<Integer, PMF> edgeCongPMFs = new HashMap<Integer, PMF>();
-			ArrayList<Double> transitionProbs = Util.congChangeProb.get(new Pair<String, String>(prev, from));
+			//ArrayList<Double> transitionProbs = Util.congChangeProb.get(new Pair<String, String>(prev, from));
+			ArrayList<Double> transitionProbs = PathData.GetCongTrans(prev, from);
 			for (int i = prevMin; i <= prevMax; ++i) {
 				Calendar cal = Calendar.getInstance();
 				cal.setTime(Util.timeOfDayDF.parse(tod));
@@ -70,8 +71,8 @@ public class Approach7 {
 		}
 		//Rewrite using PathData
 		String lastEdge = sensorList[sensorList.length - 2];
-		Pair<Double, Double> probs = GenerateLinkCorrelations.GetLinkCongestion(lastEdge);
-		Double normProb = probs.getFirst(), congProb = probs.getSecond();
+		Pair<Double, Double> probs = PathData.GetLinkCongestion(lastEdge);
+		Double normProb = probs.getSecond(), congProb = probs.getFirst();
 		int min = Math.min(normPMF.min, congPMF.min);
 		int max = Math.max(normPMF.max, congPMF.max);
 		PMF retPMF = new PMF(min, max);

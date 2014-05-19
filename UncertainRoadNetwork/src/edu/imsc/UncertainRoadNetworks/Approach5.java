@@ -42,9 +42,11 @@ public class Approach5 {
 			retDist.var += edgeDist.var;
 			Double sum = 0.0;
 			for (int i = 0; i < s; ++i)
-				sum += Util.pearsonCorrCoef.get(new Pair<String, String>(sensorList[s], sensorList[i]));
+				//sum += Util.pearsonCorrCoef.get(new Pair<String, String>(sensorList[s], sensorList[i]));
+				sum += PathData.GetPearsonCorr(sensorList[s], sensorList[i]);
 			for (int i = s+1; i < sensorList.length - 1; ++i)
-				sum += Util.pearsonCorrCoef.get(new Pair<String, String>(sensorList[s], sensorList[i]));
+				//sum += Util.pearsonCorrCoef.get(new Pair<String, String>(sensorList[s], sensorList[i]));
+				sum += PathData.GetPearsonCorr(sensorList[s], sensorList[i]);
 			retDist.var += sum;
 		}
 		return retDist;
