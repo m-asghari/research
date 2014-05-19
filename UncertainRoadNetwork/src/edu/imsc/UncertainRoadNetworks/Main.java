@@ -252,10 +252,14 @@ public class Main {
 							predictionCal.setTime(startTime.getTime());
 							predictionCal.add(Calendar.MINUTE, predictionTime);
 							String predictionTOD = Util.timeOfDayDF.format(predictionCal.getTime());
+							Calendar startCal = Calendar.getInstance();
 							ArrayList<Integer> filteredDays = Util.FilterDays(modelDays, sensorList[0], (Calendar)startTime.clone());
+							Calendar endCal = Calendar.getInstance();
 							if (filteredDays.size() > 0) {
 								modelDist = Approach1.GenerateModel(sensorList, predictionTOD, filteredDays, null);
 								if (modelDist == null) continue;
+								Util.l_passedMillis += endCal.getTimeInMillis() - startCal.getTimeInMillis();
+								Util.pl_passedMillis += endCal.getTimeInMillis() - startCal.getTimeInMillis();
 							}
 							else
 								continue;
