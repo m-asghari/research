@@ -49,6 +49,7 @@ public class StartTimeGenerator {
 		end.setTime(Util.oracleDF.parse("01-JAN-14 00.00.00.000 AM"));
 		int counter = 0;
 		while (start.before(end)) {
+			Util.days.add(start.get(Calendar.DAY_OF_YEAR));
 			startTimes.get(counter++ % k).add((Calendar)start.clone());
 			start.add(Calendar.DAY_OF_YEAR, nextDay.get(start.get(Calendar.DAY_OF_WEEK)));
 		}

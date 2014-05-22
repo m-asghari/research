@@ -38,7 +38,7 @@ public class Approach6 {
 			if (edgeCongPMF == null || edgeNormPMF == null)
 				return null;
 			if (Util.predictionMethod == PredictionMethod.Interpolated) {
-				Double actualTime = Util.GetActualTravelTime(from, (Calendar)startTime.clone());
+				Double actualTime = Util.GetActualEdgeTravelTime(from, (Calendar)startTime.clone());
 				if (actualTime == null) {
 					return null;
 				}

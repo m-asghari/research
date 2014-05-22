@@ -24,7 +24,7 @@ public class Approach2 {
 			if (edgePMF == null)
 				return null;
 			if (Util.predictionMethod == PredictionMethod.Interpolated) {
-				Double actualTime = Util.GetActualTravelTime(from, (Calendar)startTime.clone());
+				Double actualTime = Util.GetActualEdgeTravelTime(from, (Calendar)startTime.clone());
 				if (actualTime == null)
 					return null;
 				edgePMF = edgePMF.Interpolate(actualTime, Util.alpha);
@@ -49,6 +49,7 @@ public class Approach2 {
 		Util.p_passedMillis += p_PassedMillis; Util.p_timeCounter++;
 		Util.l_passedMillis += l_passedMillis; Util.l_timeCounter++;
 		Util.pl_passedMillis += pl_passedMillis; Util.pl_timeCounter++;
+		retPMF.ComputeMean();
 		return retPMF;
 	}
 	

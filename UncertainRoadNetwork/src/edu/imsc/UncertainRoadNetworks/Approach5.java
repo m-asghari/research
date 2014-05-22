@@ -34,9 +34,10 @@ public class Approach5 {
 			ArrayList<Double> travelTimes = allTravelTimes.get(from);
 			NormalDist edgeDist = new NormalDist(travelTimes);
 			if (Util.predictionMethod == PredictionMethod.Interpolated) {
-				Double actualTravelTime = Util.GetActualTravelTime(from, (Calendar)startTime.clone());
+				Double actualTravelTime = Util.GetActualEdgeTravelTime(from, (Calendar)startTime.clone());
 				if (actualTravelTime == null)
 					return null;
+				edgeDist = edgeDist.Interpolate(actualTravelTime, Util.alpha);
 			}
 			retDist.mean += edgeDist.mean;
 			retDist.var += edgeDist.var;

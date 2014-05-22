@@ -30,7 +30,7 @@ public class Approach7 {
 			String prev = sensorList[s-1];
 			String from = sensorList[s];
 			startCal1 = Calendar.getInstance();
-			Double currTravelTime = Util.GetActualTravelTime(from, (Calendar)startTime.clone());
+			Double currTravelTime = Util.GetActualEdgeTravelTime(from, (Calendar)startTime.clone());
 			int prevMin = Math.min(congPMF.min, normPMF.min);
 			int prevMax = Math.max(congPMF.max, normPMF.max);
 			HashMap<Integer, PMF> edgeNormPMFs = new HashMap<Integer, PMF>();
@@ -50,8 +50,8 @@ public class Approach7 {
 					if (currTravelTime == null) {
 						return null;
 					}
-					edgeNormPMF = edgeNormPMF.Interpolate(currTravelTime, (Util.timeHorizon - prevMin - i)/Util.timeHorizon);
-					edgeCongPMF = edgeCongPMF.Interpolate(currTravelTime, (Util.timeHorizon - prevMin - i)/Util.timeHorizon);
+					edgeNormPMF = edgeNormPMF.Interpolate(currTravelTime, Util.alpha);
+					edgeCongPMF = edgeCongPMF.Interpolate(currTravelTime, Util.alpha);
 				}
 				edgeNormPMFs.put(i, edgeNormPMF);
 				edgeCongPMFs.put(i, edgeCongPMF);

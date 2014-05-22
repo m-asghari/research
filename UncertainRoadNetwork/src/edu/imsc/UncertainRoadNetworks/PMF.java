@@ -10,6 +10,7 @@ public class PMF {
 	
 	public int min;
 	public int max;
+	public double mean;
 	public HashMap<Integer, Double> prob;
 	
 	public PMF() {
@@ -68,6 +69,13 @@ public class PMF {
 			this.min = 0;
 			this.max = 0;
 			this.prob.put(0, 1.0);
+		}
+	}
+	
+	public void ComputeMean() {
+		mean = 0.0;
+		for (Entry<Integer, Double> e : prob.entrySet()) {
+			mean += e.getKey() * e.getValue();
 		}
 	}
 	

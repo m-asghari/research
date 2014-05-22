@@ -1,7 +1,9 @@
 package edu.imsc.UncertainRoadNetworks;
 
 import java.sql.Statement;
+import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
@@ -107,7 +109,7 @@ public class PathData {
 		}
 	}
 	
-	public static Pair<Double, Boolean> GetEdgePattern(String from, String tod, Integer day) {
+	private static Pair<Double, Boolean> GetExactEdgePattern(String from, String tod, Integer day) {
 		try {
 			Pair<Double, Boolean> pattern = edgePatterns.get(from).get(day).get(tod);
 			return pattern;
@@ -115,6 +117,59 @@ public class PathData {
 		catch (NullPointerException npe){
 			return null;
 		}
+	}
+	
+	private static ArrayList<Pair<Double, Boolean>> GetCloseEdgePatterns(String from, String tod, Integer day, Integer var) {
+		ArrayList<Pair<Double, Boolean>> retList = new ArrayList<Pair<Double,Boolean>>();
+		Calendar todCal = Calendar.getInstance();
+		try {
+			todCal.setTime(Util.timeOfDayDF.parse(tod));
+		}
+		catch (ParseException pe) {
+			pe.printStackTrace();
+		}
+		for (int i = 1; i <= var; ++i) {
+			Calendar copy = Calendar.getInstance();
+			copy.setTime(todCal.getTime());
+			copy.add(Calendar.MINUTE, i * 5);
+			String copyTod = Util.timeOfDayDF.format(copy.getTime());
+			Pair<Double, Boolean> p1 = GetExactEdgePattern(from, copyTod, day);
+			if (p1 != null) retList.add(p1);
+			copy.setTime(todCal.getTime());
+			copy.add(Calendar.MINUTE, i * -5);
+			copyTod = Util.timeOfDayDF.format(copy.getTime());
+			Pair<Double, Boolean> p2 = GetExactEdgePattern(from, copyTod, day);
+			if (p2 != null) retList.add(p2);
+		}
+		return retList;
+	}
+	
+	public static Pair<Double, Boolean> GetEdgePattern(String from, String tod, Integer day) {
+		Pair<Double, Boolean> pattern = GetExactEdgePattern(from, tod, day);
+		if (pattern == null) 
+		{
+			Util.no_exact_data++;
+			ArrayList<Pair<Double, Boolean>> closePatterns = GetCloseEdgePatterns(from, tod, day, 3);
+			if (closePatterns.size() > 0) return closePatterns.get(0);
+			Util.no_close_data++;
+			return null;
+		}
+		return pattern;
+	}
+	
+	public static ArrayList<Double> GetTravelTimes(String from, String tod, ArrayList<Integer> days, Boolean cong) {
+		ArrayList<Double> travelTimes = new ArrayList<Double>();  
+		for (Integer day : days) {
+			//Pair<Double, Boolean> pattern = GetEdgePattern(from, tod, day);
+			Pair<Double, Boolean> pattern = GetEdgePattern(from, tod, day);
+			if (pattern == null) 
+			{
+				continue;
+			}
+			Double travelTime = pattern.getFirst();
+			if ((cong == pattern.getSecond() || cong == null) && travelTime != null) travelTimes.add(travelTime);
+		}
+		return travelTimes;
 	}
 	
 	public static Double GetPearsonCorr(String from, String to) {
@@ -157,17 +212,6 @@ public class PathData {
 		catch (NullPointerException nep) {
 			return null;
 		}
-	}
-	
-	public static ArrayList<Double> GetTravelTimes(String from, String tod, ArrayList<Integer> days, Boolean cong) {
-		ArrayList<Double> travelTimes = new ArrayList<Double>();  
-		for (Integer day : days) {
-			Pair<Double, Boolean> pattern = GetEdgePattern(from, tod, day);
-			if (pattern == null) continue;
-			Double travelTime = pattern.getFirst();
-			if ((cong == pattern.getSecond() || cong == null) && travelTime != null) travelTimes.add(travelTime);
-		}
-		return travelTimes;
 	}
 }
 

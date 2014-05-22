@@ -12,7 +12,7 @@ import edu.imsc.UncertainRoadNetworks.Util.PredictionMethod;
 public class Approach1 {
 	
 	public static NormalDist GenerateModel(String[] sensorList, String timeOfDay,
-			ArrayList<Integer> days, Calendar startTime) throws SQLException, ParseException{
+			ArrayList<Integer> days, Calendar queryTime) throws SQLException, ParseException{
 		Calendar startCal1, startCal2, endCal1, endCal2;
 		long p_PassedMillis = 0, l_passedMillis = 0, pl_passedMillis = 0;
 		
@@ -21,12 +21,19 @@ public class Approach1 {
 			String from = sensorList[s];
 			startCal1 = Calendar.getInstance();
 			NormalDist edgeDist = Util.getNormalDist(from, timeOfDay, days);
-			if (edgeDist == null)
+			if (edgeDist == null) {
+				Util.no_model++;
 				return null;
+			}
 			if (Util.predictionMethod == PredictionMethod.Interpolated) {
-				Double actualTravelTime = Util.GetActualTravelTime(from, (Calendar)startTime.clone());
-				if (actualTravelTime == null)
-					return null;
+				Double actualTravelTime = Util.GetActualEdgeTravelTime(from, (Calendar)queryTime.clone());
+				if (actualTravelTime == null) {
+					Util.no_actual++;
+					//actualTravelTime = Util.GetMeanEdgeTravelTime(from, timeOfDay, days);
+					//if (actualTravelTime == null) {
+						return null;
+					//}					
+				}
 				edgeDist = edgeDist.Interpolate(actualTravelTime, Util.alpha);
 			}
 			endCal1 = Calendar.getInstance();
@@ -44,9 +51,9 @@ public class Approach1 {
 		return retDist;
 	}
 
-	public static Double GenerateActual(String[] sensorList,
-			Calendar startTime) throws SQLException, ParseException {
-		return Util.GetActualTravelTime(sensorList, startTime);
+	public static Double GenerateActual(String[] sensorList, 
+			Calendar queryTime) throws SQLException, ParseException {
+		return Util.GetActualTravelTime(sensorList, queryTime);
 	}
 	
 	public static String GetResults(Calendar startTime, NormalDist modelDist, Double actualTime, Double score) {

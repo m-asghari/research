@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 
+import org.apache.commons.math3.stat.descriptive.moment.Mean;
+
 import oracle.jdbc.OracleDriver;
 import oracle.jdbc.driver.OracleConnection;
 import oracle.jdbc.driver.OracleResultSet;
@@ -36,6 +38,7 @@ public class Util {
 	public static Double similarityThreshold;
 	public static Double alpha;
 	public static Double timeHorizon;
+	public static ArrayList<Integer> days = new ArrayList<Integer>();
 	
 	public static Double maxSpeed = 65.0;
 	
@@ -48,6 +51,13 @@ public class Util {
 	
 	public static DateFormat oracleDF = new SimpleDateFormat("dd-MMM-yy hh.mm.ss.SSS a");
 	public static DateFormat timeOfDayDF = new SimpleDateFormat("HH:mm");
+	
+	public static long no_exact_data = 0;
+	public static long no_close_data = 0;
+	public static long no_model = 0;
+	public static long model = 0;
+	public static long no_actual = 0;
+	public static long actual = 0;
 	
 	private static OracleConnection getConnection()
 	{
@@ -120,24 +130,21 @@ public class Util {
 	public static Double GetActualTravelTime(String[] sensorList, Calendar startTime) {
 		Double travelTime = 0.0;
 		Calendar currentTime = (Calendar)startTime.clone();
-		int day = startTime.get(Calendar.DAY_OF_YEAR);
 		for (int i = 0; i < sensorList.length - 1; ++i) {
 			String from = sensorList[i];
-			String tod = timeOfDayDF.format(RoundTimeDown((Calendar)currentTime.clone()).getTime());
-			try {
-				Double edgeTravelTime = PathData.GetEdgePattern(from, tod, day).getFirst();
-				int min = RoundDouble(edgeTravelTime, 1);
-				currentTime.add(Calendar.MINUTE, min);
-				travelTime += edgeTravelTime;
+			Double edgeTravelTime = GetActualEdgeTravelTime(from, RoundTimeDown((Calendar)currentTime.clone()));
+			if (edgeTravelTime == null) {
+				return null;
 			}
-			catch (NullPointerException nep) {
-				return null;				
-			}			
+			int second = RoundDouble(edgeTravelTime, 1);
+			currentTime.add(Calendar.SECOND, second);
+			String test = Util.oracleDF.format(currentTime.getTime());
+			travelTime += edgeTravelTime;			
 		}		
 		return travelTime;
 	}
 	
-	public static Double GetActualTravelTime(String from, Calendar startTime) {
+	public static Double GetActualEdgeTravelTime(String from, Calendar startTime) {
 		int day = startTime.get(Calendar.DAY_OF_YEAR);
 		String tod = timeOfDayDF.format(startTime.getTime());
 		Double travelTime = null;
@@ -145,9 +152,20 @@ public class Util {
 			travelTime = PathData.GetEdgePattern(from, tod, day).getFirst();
 		}
 		catch (NullPointerException nep) {
-			return null;
+			//travelTime = GetMeanEdgeTravelTime(from, tod, days);
+			//if (travelTime == null){
+				return null;
+			//}
 		}
 		return travelTime;
+	}
+	
+	public static Double GetMeanEdgeTravelTimee(String from, String tod,	ArrayList<Integer> days) {
+		ArrayList<Double> travelTimes = PathData.GetTravelTimes(from, tod, days, null);
+		if (travelTimes.size() == 0) {
+			return null;
+		}
+		return GetMean(travelTimes);
 	}
 		
 	public static ArrayList<Double> Interpolate(ArrayList<Double> input, Double v, Double alpha) {

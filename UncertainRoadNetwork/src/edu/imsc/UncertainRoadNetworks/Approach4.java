@@ -24,7 +24,7 @@ public class Approach4 {
 			startCal1 = Calendar.getInstance();
 			Double currTravelTime = 0.0;
 			if (Util.predictionMethod == PredictionMethod.Interpolated) {
-				currTravelTime = Util.GetActualTravelTime(from, (Calendar)startTime.clone());
+				currTravelTime = Util.GetActualEdgeTravelTime(from, (Calendar)startTime.clone());
 				if (currTravelTime == null)
 					return null;
 			}
@@ -40,7 +40,7 @@ public class Approach4 {
 				if (edgePMF == null)
 					return null;
 				if (Util.predictionMethod == PredictionMethod.Interpolated) {
-					edgePMF = edgePMF.Interpolate(currTravelTime, (Util.timeHorizon - min - i)/Util.timeHorizon);
+					edgePMF = edgePMF.Interpolate(currTravelTime, Util.alpha);
 				}
 				edgePMFs.put(i, edgePMF);
 			}
