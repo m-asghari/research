@@ -26,8 +26,8 @@ public class Main {
 		pathNums.put(new Pair<String, String>("p", "paths"), new Pair<Integer, Integer>(100, 110));
 		pathNums.put(new Pair<String, String>("r", "paths"), new Pair<Integer, Integer>(110, 120));
 		String linkType = "r";
-		String pathType = "links";
-		String distType = "continuous_Approach1";
+		String pathType = "paths";
+		String distType = "Approach4";
 		int minPath = pathNums.get(new Pair<String, String>(linkType, pathType)).getFirst();
 		int maxPath = pathNums.get(new Pair<String, String>(linkType, pathType)).getSecond();
 		//int[] startHours = new int[] {7, 8, 15, 16, 17};
@@ -35,7 +35,7 @@ public class Main {
 		//int[] predictionTimes = new int[] {5, 10, 15, 30, 60, 90, 120, 150, 180, 210, 240};
 		int[] predictionTimes = new int[] {5, 10, 15, 30, 60, 90, 115};
 		
-		/*Util.p_passedMillis = 0; Util.l_passedMillis = 0; Util.pl_passedMillis = 0;
+		Util.p_passedMillis = 0; Util.l_passedMillis = 0; Util.pl_passedMillis = 0;
 		Util.p_timeCounter = 0; Util.l_timeCounter = 0; Util.pl_timeCounter = 0;
 		try {
 			HashMap<Integer, Pair<FileReader, BufferedReader>> inputFiles = new HashMap<Integer, Pair<FileReader,BufferedReader>>();
@@ -66,6 +66,7 @@ public class Main {
 			}
 			WriteResultsToFile(crps_results, String.format("crps_results_%s_%s_Historic_%s.csv", pathType, linkType, distType));
 			WriteResultsToFile(ev_results, String.format("ev_results_%s_%s_Historic_%s.csv", pathType, linkType, distType));
+			WriteStatsToFile(String.format("stats_%s_%s_Historic_%s.csv", pathType, linkType, distType));
 			for (int startHour : startHours) {
 				inputFiles.get(startHour).getSecond().close();
 				inputFiles.get(startHour).getFirst().close();
@@ -73,7 +74,7 @@ public class Main {
 		}
 		catch (Exception e) {
 			e.printStackTrace();
-		}*/
+		}
 		
 		Util.p_passedMillis = 0; Util.l_passedMillis = 0; Util.pl_passedMillis = 0;
 		Util.p_timeCounter = 0; Util.l_timeCounter = 0; Util.pl_timeCounter = 0;
@@ -99,18 +100,19 @@ public class Main {
 					PathData.LoadEdgePatterns();
 					//Util.Initialize();
 					for (int predictionTime : predictionTimes) {
-						//Double similarity = 0.2;
-						for (double similarity : simThresholds) {
+						Double similarity = 0.1;
+						//for (double similarity : simThresholds) {
 							Util.similarityThreshold = similarity;
 							RunExperiment(startHour, PredictionMethod.Filtered, predictionTime);
 							System.out.println(String.format("Finished Path%d at startHour %d with threshold %f and predictionTime %d" , pathN, startHour, similarity, predictionTime));
-						}
+						//}
 					}
 					PathData.Reset();
 				}				
 			}
 			WriteResultsToFile(crps_results, String.format("crps_results_%s_%s_Filtered_%s.csv", pathType, linkType, distType));
 			WriteResultsToFile(ev_results, String.format("ev_results_%s_%s_Filtered_%s.csv", pathType, linkType, distType));
+			WriteStatsToFile(String.format("stats_%s_%s_Filtered_%s.csv", pathType, linkType, distType));
 			for (int startHour : startHours) {
 				inputFiles.get(startHour).getSecond().close();
 				inputFiles.get(startHour).getFirst().close();
@@ -144,23 +146,25 @@ public class Main {
 					PathData.LoadEdgePatterns();
 					//Util.Initialize();
 					for (int predictionTime : predictionTimes) {
-						for (double alpha : alphas) {
+						/*for (double alpha : alphas) {
 							Util.alpha = alpha;
 							Util.Log(String.format("Finished Path%d at startHour %d with alpha %f and predictionTime %d" , pathN, startHour, alpha, predictionTime));
 							RunExperiment(startHour, PredictionMethod.Interpolated, predictionTime);
 							System.out.println(String.format("Finished Path%d at startHour %d with alpha %f and predictionTime %d" , pathN, startHour, alpha, predictionTime));
-						}
-						/*Double alpha = (60.0 - predictionTime) / 60.0;
+						}*/
+						Util.timeHorizon = 60.0;
+						Double alpha = (Util.timeHorizon - predictionTime) / Util.timeHorizon;
 						if (alpha < 0.0) alpha = 0.0;
 						Util.alpha = alpha;
 						RunExperiment(startHour, PredictionMethod.Interpolated, predictionTime);
-						System.out.println(String.format("Finished Path%d at startHour %d with alpha %f and predictionTime %d" , pathN, startHour, alpha, predictionTime));*/
+						System.out.println(String.format("Finished Path%d at startHour %d with alpha %f and predictionTime %d" , pathN, startHour, alpha, predictionTime));
 					}
 					PathData.Reset();
 				}				
 			}
 			WriteResultsToFile(crps_results, String.format("crps_results_%s_%s_Interpolated_%s.csv", pathType, linkType, distType));
 			WriteResultsToFile(ev_results, String.format("ev_results_%s_%s_Interpolated_%s.csv", pathType, linkType, distType));
+			WriteStatsToFile(String.format("stats_%s_%s_Interpolated_%s.csv", pathType, linkType, distType));
 			for (int startHour : startHours) {
 				inputFiles.get(startHour).getSecond().close();
 				inputFiles.get(startHour).getFirst().close();
@@ -242,7 +246,7 @@ public class Main {
 								modelDays.add(allStartTimes.get(l).get(j).get(Calendar.DAY_OF_YEAR));
 					}
 				}
-				NormalDist modelDist;
+				PMF modelDist;
 				Double actualTime;
 				switch (Util.predictionMethod) {
 				case Historic:					
@@ -250,7 +254,7 @@ public class Main {
 					//todCal.setTime(Util.timeOfDayDF.parse(timeOfDay));
 					//todCal.add(Calendar.MINUTE, predictionTime);
 					//String todStr = Util.timeOfDayDF.format(todCal.getTime());
-					modelDist = Approach1.GenerateModel(sensorList, timeOfDay, modelDays, null);
+					modelDist = Approach4.GenerateModel(sensorList, timeOfDay, modelDays, null);
 					if (modelDist == null) {
 						//Util.no_model++;
 						continue;
@@ -260,7 +264,7 @@ public class Main {
 						//Calendar predictionCal = Calendar.getInstance();
 						//predictionCal.setTime(startTime.getTime());
 						//predictionCal.add(Calendar.MINUTE, predictionTime);
-						actualTime = Approach1.GenerateActual(sensorList, (Calendar)startTime.clone());
+						actualTime = Approach4.GenerateActual(sensorList, (Calendar)startTime.clone());
 						if (actualTime == null) {
 							//Util.no_actual++;
 							continue;
@@ -282,14 +286,14 @@ public class Main {
 						ArrayList<Integer> filteredDays = Util.FilterDays(modelDays, sensorList[0], (Calendar)queryTime.clone());
 						Calendar endCal = Calendar.getInstance();
 						if (filteredDays.size() > 0) {
-							modelDist = Approach1.GenerateModel(sensorList, timeOfDay, filteredDays, null);
+							modelDist = Approach4.GenerateModel(sensorList, timeOfDay, filteredDays, null);
 							if (modelDist == null) continue;
 							Util.l_passedMillis += endCal.getTimeInMillis() - startCal.getTimeInMillis();
 							Util.pl_passedMillis += endCal.getTimeInMillis() - startCal.getTimeInMillis();
 						}
 						else
 							continue;
-						actualTime = Approach1.GenerateActual(sensorList, (Calendar)startTime.clone());
+						actualTime = Approach4.GenerateActual(sensorList, (Calendar)startTime.clone());
 						if (actualTime == null) continue;
 						Double score = modelDist.GetScore(actualTime);
 						totalCRPSScore += score;
@@ -303,12 +307,12 @@ public class Main {
 						queryTime.setTime(startTime.getTime());
 						queryTime.add(Calendar.MINUTE, -predictionTime);
 						//String predictionTOD = Util.timeOfDayDF.format(predictionCal.getTime());
-						modelDist = Approach1.GenerateModel(sensorList, timeOfDay, modelDays, (Calendar)queryTime.clone());
+						modelDist = Approach4.GenerateModel(sensorList, timeOfDay, modelDays, (Calendar)queryTime.clone());
 						if (modelDist == null) {
 							Util.model++;
 							continue;
 						}
-						actualTime = Approach1.GenerateActual(sensorList, (Calendar)queryTime.clone());
+						actualTime = Approach4.GenerateActual(sensorList, (Calendar)startTime.clone());
 						if (actualTime == null) {
 							Util.actual++;
 							continue;

@@ -35,12 +35,14 @@ public class Approach4 {
 				Calendar cal = Calendar.getInstance();
 				cal.setTime(Util.timeOfDayDF.parse(tod));
 				cal.add(Calendar.MINUTE, i);
-				String time = Util.timeOfDayDF.format(cal.getTime());
+				String time = Util.timeOfDayDF.format(Util.RoundTimeDown((Calendar)cal.clone()).getTime());
 				PMF edgePMF = Util.getPMF(from, time, days, null);
 				if (edgePMF == null)
 					return null;
 				if (Util.predictionMethod == PredictionMethod.Interpolated) {
-					edgePMF = edgePMF.Interpolate(currTravelTime, Util.alpha);
+					Double alpha = Util.alpha - (double)i/Util.timeHorizon;
+					if (alpha < 0.0) alpha = 0.0;
+					edgePMF = edgePMF.Interpolate(currTravelTime, alpha);
 				}
 				edgePMFs.put(i, edgePMF);
 			}
