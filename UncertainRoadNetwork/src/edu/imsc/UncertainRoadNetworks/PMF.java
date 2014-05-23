@@ -5,7 +5,7 @@ import java.util.Map.Entry;
 
 
 public class PMF {
-	public static int binWidth = 1;
+	public static int binWidth = 15;
 	public static Double cutOff = 0.0001;
 	
 	public int min;
@@ -25,6 +25,14 @@ public class PMF {
 		this.max = max;
 		this.prob = new HashMap<Integer, Double>();
 	}
+		
+	@SuppressWarnings("unchecked")
+	@Override
+	protected Object clone() {
+		PMF retPMF = new PMF(this.min, this.max);
+		retPMF.prob = (HashMap<Integer, Double>)this.prob.clone();
+		return retPMF;
+	};
 	
 	public PMF(double[] inputs) {
 		this.min = Integer.MAX_VALUE;

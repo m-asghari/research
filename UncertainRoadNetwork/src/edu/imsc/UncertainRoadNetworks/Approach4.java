@@ -31,14 +31,22 @@ public class Approach4 {
 			int min = retPMF.min;
 			int max = retPMF.max;
 			HashMap<Integer, PMF> edgePMFs = new HashMap<Integer, PMF>();
+			String prevTime = "";
+			PMF prevPMF = null;
 			for (int i = min; i <= max; i+=PMF.binWidth) {
 				Calendar cal = Calendar.getInstance();
 				cal.setTime(Util.timeOfDayDF.parse(tod));
-				cal.add(Calendar.MINUTE, i);
+				cal.add(Calendar.SECOND, i);
 				String time = Util.timeOfDayDF.format(Util.RoundTimeDown((Calendar)cal.clone()).getTime());
-				PMF edgePMF = Util.getPMF(from, time, days, null);
-				if (edgePMF == null)
-					return null;
+				PMF edgePMF = null;
+				if (time.equals(prevTime)) edgePMF = (PMF)prevPMF.clone();
+				else  {
+					edgePMF = Util.getPMF(from, time, days, null);
+					if (edgePMF == null)
+						return null;
+					prevPMF = (PMF)edgePMF.clone();
+					prevTime = time;
+				}
 				if (Util.predictionMethod == PredictionMethod.Interpolated) {
 					Double alpha = Util.alpha - (double)i/Util.timeHorizon;
 					if (alpha < 0.0) alpha = 0.0;
