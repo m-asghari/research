@@ -202,14 +202,14 @@ public class PMF {
 		}*/
 		int gmin = Math.min(this.min, rounded);
 		int gmax = Math.max(this.max, rounded);
-		for (int i = gmin; i < rounded; ++i) {
+		for (int i = gmin; i < rounded; i += binWidth) {
 			cdf += Prob(i);
 			score += Math.pow(cdf,  2) * binWidth;
 		}
 		cdf += Prob(rounded);
 		score += (actualTime - (rounded - ((double)binWidth/2))) * Math.pow(cdf, 2);
 		score += ((rounded + ((double)binWidth/2)) - actualTime) * Math.pow(1-cdf, 2);
-		for (int i = rounded + 1; i < gmax; ++i) {
+		for (int i = rounded + binWidth; i < gmax; i += binWidth) {
 			cdf += Prob(i);
 			score += Math.pow(1-cdf, 2)*binWidth;
 		}
