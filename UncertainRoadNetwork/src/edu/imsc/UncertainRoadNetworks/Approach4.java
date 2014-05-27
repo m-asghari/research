@@ -74,6 +74,7 @@ public class Approach4 {
 		Util.p_passedMillis += p_PassedMillis; Util.p_timeCounter++;
 		Util.l_passedMillis += l_passedMillis; Util.l_timeCounter++;
 		Util.pl_passedMillis += pl_passedMillis; Util.pl_timeCounter++;
+		retPMF.ComputeMean();
 		return retPMF;
 	}
 	

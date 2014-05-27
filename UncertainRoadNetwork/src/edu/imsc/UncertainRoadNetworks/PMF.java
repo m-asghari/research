@@ -6,7 +6,7 @@ import java.util.Map.Entry;
 
 public class PMF {
 	public static int binWidth = 15;
-	public static Double cutOff = 0.0001;
+	public static Double cutOff = 0.000001;
 	
 	public int min;
 	public int max;
@@ -88,19 +88,24 @@ public class PMF {
 	}
 	
 	public void Adjust() {
-		while (this.Prob(this.min) <= PMF.cutOff) {
-			if (this.prob.containsKey(this.min)) this.prob.remove(this.min);
-			this.min += binWidth;
-		}
-		while (this.Prob(this.max) <= PMF.cutOff) {
+		//this.Normalize();
+		while (this.Prob(this.max) <= PMF.cutOff && this.max > this.min) {
 			if (this.prob.containsKey(this.max)) this.prob.remove(this.max);
 			this.max -= binWidth;
+		}
+		while (this.Prob(this.min) <= PMF.cutOff && this.min < this.max) {
+			if (this.prob.containsKey(this.min)) this.prob.remove(this.min);
+			this.min += binWidth;
 		}
 		this.Normalize();
 	}
 	
 	public void Normalize() {
 		Double sum = 0.0;
+		if (this.min == this.max && this.Prob(min) == 0) {
+			this.prob = new HashMap<Integer, Double>();
+			return;
+		}
 		for (Entry<Integer, Double> e : this.prob.entrySet()) {
 			sum += e.getValue();
 		}

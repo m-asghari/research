@@ -24,29 +24,44 @@ public class Approach7 {
 		PMF normPMF = Util.getPMF(sensorList[0], tod, days, false);
 		endCal1 = Calendar.getInstance();
 		l_passedMillis = endCal1.getTimeInMillis() - startCal1.getTimeInMillis();
-		if (congPMF == null || normPMF == null)
+		if (congPMF == null && normPMF == null)
 			return null;
+		if (congPMF == null) congPMF = new PMF(0, 0);
+		if (normPMF == null) normPMF = new PMF(0, 0);
 		for (int s = 1; s < sensorList.length - 1; ++s) {
 			String prev = sensorList[s-1];
 			String from = sensorList[s];
 			startCal1 = Calendar.getInstance();
-			Double currTravelTime = Util.GetActualEdgeTravelTime(from, (Calendar)startTime.clone());
 			int prevMin = Math.min(congPMF.min, normPMF.min);
 			int prevMax = Math.max(congPMF.max, normPMF.max);
 			HashMap<Integer, PMF> edgeNormPMFs = new HashMap<Integer, PMF>();
 			HashMap<Integer, PMF> edgeCongPMFs = new HashMap<Integer, PMF>();
-			//ArrayList<Double> transitionProbs = Util.congChangeProb.get(new Pair<String, String>(prev, from));
 			ArrayList<Double> transitionProbs = PathData.GetCongTrans(prev, from);
+			String prevTime = "";
+			PMF prevCongPMF = null, prevNormPMF = null;
 			for (int i = prevMin; i <= prevMax; ++i) {
 				Calendar cal = Calendar.getInstance();
 				cal.setTime(Util.timeOfDayDF.parse(tod));
-				cal.add(Calendar.MINUTE, i);
-				String time = Util.timeOfDayDF.format(cal.getTime());
-				PMF edgeNormPMF = Util.getPMF(from, time, days, false);
-				PMF edgeCongPMF = Util.getPMF(from, time, days, true);
-				if (edgeCongPMF == null || edgeNormPMF == null)
-					return null;
+				cal.add(Calendar.SECOND, i);
+				String time = Util.timeOfDayDF.format(Util.RoundTimeDown((Calendar)cal.clone()).getTime());
+				PMF edgeNormPMF = null, edgeCongPMF = null;
+				if (time.equals(prevTime)) {
+					edgeNormPMF = (PMF) prevNormPMF.clone();
+					edgeCongPMF = (PMF) prevCongPMF.clone();
+				}
+				else {
+					edgeNormPMF = Util.getPMF(from, time, days, false);
+					edgeCongPMF = Util.getPMF(from, time, days, true);
+					if (edgeCongPMF == null && edgeNormPMF == null)
+						return null;
+					if (edgeCongPMF == null) edgeCongPMF = new PMF(0, 0);
+					if (edgeNormPMF == null) edgeNormPMF = new PMF(0, 0);
+					prevCongPMF = (PMF) edgeCongPMF.clone();
+					prevNormPMF = (PMF) edgeNormPMF.clone();
+					prevTime = time;
+				}
 				if (Util.predictionMethod == PredictionMethod.Interpolated) {
+					Double currTravelTime = Util.GetActualEdgeTravelTime(from, (Calendar)startTime.clone());
 					if (currTravelTime == null) {
 						return null;
 					}
@@ -59,9 +74,9 @@ public class Approach7 {
 			endCal1 = Calendar.getInstance();
 			PMF newCongPMF = new PMF(prevMin + edgeCongPMFs.get(prevMin).min, prevMax + edgeCongPMFs.get(prevMax).max);
 			startCal2 = Calendar.getInstance();
-			for (int b = newCongPMF.min; b <= newCongPMF.max; ++b) {
+			for (int b = newCongPMF.min; b <= newCongPMF.max; b += PMF.binWidth) {
 				Double sum = 0.0;
-				for (int h = prevMin; h <= prevMax; ++h) {
+				for (int h = prevMin; h <= prevMax; h += PMF.binWidth) {
 					sum += transitionProbs.get(Util.t2t) * congPMF.Prob(h) * edgeCongPMFs.get(h).Prob(b-h);
 					sum += transitionProbs.get(Util.f2t) * normPMF.Prob(h) * edgeCongPMFs.get(h).Prob(b-h);
 				}
@@ -70,13 +85,13 @@ public class Approach7 {
 			newCongPMF.Adjust();
 			congPMF = newCongPMF;
 			PMF newNormPMF = new PMF(prevMin + edgeNormPMFs.get(prevMin).min, prevMax + edgeNormPMFs.get(prevMax).max);
-			for (int b = newNormPMF.min; b <= newNormPMF.max; ++b) {
+			for (int b = newNormPMF.min; b <= newNormPMF.max; b += PMF.binWidth) {
 				Double sum = 0.0;
-				for (int h = prevMin; h <= prevMax; ++h) {
+				for (int h = prevMin; h <= prevMax; h += PMF.binWidth) {
 					sum += transitionProbs.get(Util.t2f) * congPMF.Prob(h) * edgeNormPMFs.get(h).Prob(b-h);
 					sum += transitionProbs.get(Util.f2f) * normPMF.Prob(h) * edgeNormPMFs.get(h).Prob(b-h);
 				}
-				newCongPMF.prob.put(b, sum);
+				newNormPMF.prob.put(b, sum);
 			}
 			newNormPMF.Adjust();
 			normPMF = newNormPMF;
@@ -99,13 +114,12 @@ public class Approach7 {
 		Util.p_passedMillis += p_PassedMillis; Util.p_timeCounter++;
 		Util.l_passedMillis += l_passedMillis; Util.l_timeCounter++;
 		Util.pl_passedMillis += pl_passedMillis; Util.pl_timeCounter++;
+		retPMF.ComputeMean();
 		return retPMF;
 	}
 	
-	public static PMF GenerateActual(String[] sensorList, 
-			ArrayList<Calendar> startTimes) throws SQLException, ParseException {
-		ArrayList<Double> travelTimes = SpeedUp.TimeInependentTravelTime(sensorList, startTimes);
-		PMF retPMF = new PMF(travelTimes);
-		return retPMF;
+	public static Double GenerateActual(String[] sensorList,
+			Calendar startTime) throws SQLException, ParseException {
+		return Util.GetActualTravelTime(sensorList, startTime);
 	}
 }

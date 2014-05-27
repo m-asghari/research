@@ -44,6 +44,10 @@ public class GenerateLinkCorrelations {
 				for (int startHour : startHours) {
 					Util.path = inputFiles.get(startHour).getSecond().readLine();
 					Util.pathNumber = String.format("%d00%d", startHour, pathN);
+					Statement stm = Util.conn.createStatement();
+					String query = "drop table path" + Util.pathNumber + "_edge_correlations";
+					stm.execute(query);
+					stm.close();
 					GenerateForPath();
 				}
 			}
@@ -150,6 +154,8 @@ public class GenerateLinkCorrelations {
 		OracleResultSet ors = (OracleResultSet) stm.executeQuery(query);
 		while (ors.next()) 
 			retList.add(ors.getDouble(1));
+		ors.close();
+		stm.close();
 		return retList;
 	}
 	
@@ -177,6 +183,8 @@ public class GenerateLinkCorrelations {
 			Integer status2 = (ors.getString(2).equals("TRUE")) ? 1 : 0;
 			retList.add(new Pair<Integer, Integer>(status1, status2));
 		}
+		ors.close();
+		stm.close();
 		return retList;
 	}
 	

@@ -15,7 +15,7 @@ import edu.imsc.UncertainRoadNetworks.Util.PredictionMethod;
 public class Approach6 {
 	
 
-	public static PMF GenerateModels(String[] sensorList, String tod, 
+	public static PMF GenerateModel(String[] sensorList, String tod, 
 			ArrayList<Integer> days, Calendar startTime) throws SQLException, ParseException, IOException{
 		Calendar startCal1, startCal2, endCal1, endCal2;
 		long p_PassedMillis = 0, l_passedMillis = 0, pl_passedMillis = 0;
@@ -25,8 +25,10 @@ public class Approach6 {
 		PMF normPMF = Util.getPMF(sensorList[0], tod, days, false);
 		endCal1 = Calendar.getInstance();
 		l_passedMillis = endCal1.getTimeInMillis() - startCal1.getTimeInMillis();
-		if (congPMF == null || normPMF == null)
+		if (congPMF == null && normPMF == null)
 			return null;
+		if (congPMF == null) congPMF = new PMF(0, 0);
+		if (normPMF == null) normPMF = new PMF(0, 0);
 		for (int s = 1; s < sensorList.length - 1; ++s) {
 			String prev = sensorList[s-1];
 			String from = sensorList[s];
@@ -35,8 +37,13 @@ public class Approach6 {
 			ArrayList<Double> transitionProb = PathData.GetCongTrans(prev, from);
 			PMF edgeCongPMF = Util.getPMF(from, tod, days, true);
 			PMF edgeNormPMF = Util.getPMF(from, tod, days, false);
-			if (edgeCongPMF == null || edgeNormPMF == null)
+			if (edgeCongPMF == null && edgeNormPMF == null)
 				return null;
+			if (edgeCongPMF == null) 
+				edgeCongPMF = new PMF(0, 0);
+			if (edgeNormPMF == null)
+				edgeNormPMF = new PMF(0, 0);
+			
 			if (Util.predictionMethod == PredictionMethod.Interpolated) {
 				Double actualTime = Util.GetActualEdgeTravelTime(from, (Calendar)startTime.clone());
 				if (actualTime == null) {
@@ -79,7 +86,7 @@ public class Approach6 {
 		//Rewrinte using PathData
 		String lastEdge = sensorList[sensorList.length - 2];
 		Pair<Double, Double> probs = PathData.GetLinkCongestion(lastEdge);
-		Double normProb = probs.getSecond(), congProb = probs.getFirst();
+		Double normProb = probs.getFirst(), congProb = probs.getSecond();
 		int min = Math.min(normPMF.min, congPMF.min);
 		int max = Math.max(normPMF.max, congPMF.max);
 		PMF retPMF = new PMF(min, max);
@@ -90,6 +97,7 @@ public class Approach6 {
 		Util.p_passedMillis += p_PassedMillis; Util.p_timeCounter++;
 		Util.l_passedMillis += l_passedMillis; Util.l_timeCounter++;
 		Util.pl_passedMillis += pl_passedMillis; Util.pl_timeCounter++;
+		retPMF.ComputeMean();
 		return retPMF;
 	}
 	
