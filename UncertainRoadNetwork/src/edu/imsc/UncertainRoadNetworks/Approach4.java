@@ -14,7 +14,7 @@ import edu.imsc.UncertainRoadNetworks.Util.PredictionMethod;
 public class Approach4 {
 	
 	public static PMF GenerateModel(String[] sensorList, String tod, 
-			ArrayList<Integer> days, Calendar startTime) throws SQLException, ParseException {
+			ArrayList<Integer> days, Calendar queryTime) throws SQLException, ParseException {
 		Calendar startCal1, startCal2, endCal1, endCal2;
 		long p_PassedMillis = 0, l_passedMillis = 0, pl_passedMillis = 0;
 		
@@ -24,9 +24,7 @@ public class Approach4 {
 			startCal1 = Calendar.getInstance();
 			Double currTravelTime = 0.0;
 			if (Util.predictionMethod == PredictionMethod.Interpolated) {
-				currTravelTime = Util.GetActualEdgeTravelTime(from, (Calendar)startTime.clone());
-				if (currTravelTime == null)
-					return null;
+				currTravelTime = Util.GetActualEdgeTravelTime(from, (Calendar)queryTime.clone());
 			}
 			int min = retPMF.min;
 			int max = retPMF.max;
@@ -41,14 +39,18 @@ public class Approach4 {
 				PMF edgePMF = null;
 				if (time.equals(prevTime)) edgePMF = (PMF)prevPMF.clone();
 				else  {
+					if (Util.predictionMethod == PredictionMethod.Filtered) {
+						days = Util.FilterDays(days, from, (Calendar)queryTime.clone());
+						if (days.size() == 0) return null;
+					}
 					edgePMF = Util.getPMF(from, time, days, null);
-					if (edgePMF == null)
-						return null;
+					if (edgePMF == null) return null;
 					prevPMF = (PMF)edgePMF.clone();
 					prevTime = time;
 				}
 				if (Util.predictionMethod == PredictionMethod.Interpolated) {
-					Double alpha = Util.alpha - (double)i/Util.timeHorizon;
+					if (currTravelTime == null)	return null;
+					Double alpha = Util.alpha - (double)i/(Util.timeHorizon*60);
 					if (alpha < 0.0) alpha = 0.0;
 					edgePMF = edgePMF.Interpolate(currTravelTime, alpha);
 				}

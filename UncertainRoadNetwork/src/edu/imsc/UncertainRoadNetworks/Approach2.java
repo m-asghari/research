@@ -12,7 +12,7 @@ import edu.imsc.UncertainRoadNetworks.Util.PredictionMethod;
 public class Approach2 {
 	
 	public static PMF GenerateModel(String[] sensorList, String timeOfDay, 
-			ArrayList<Integer> days, Calendar startTime) throws SQLException, ParseException{
+			ArrayList<Integer> days, Calendar queryTime) throws SQLException, ParseException{
 		Calendar startCal1, startCal2, endCal1, endCal2;
 		long p_PassedMillis = 0, l_passedMillis = 0, pl_passedMillis = 0;
 		
@@ -20,11 +20,16 @@ public class Approach2 {
 		for (int s = 0; s < sensorList.length - 1; ++s) {
 			String from = sensorList[s];
 			startCal1 = Calendar.getInstance();
+			if (Util.predictionMethod == PredictionMethod.Filtered) {
+				days = Util.FilterDays(days, from, (Calendar)queryTime.clone());
+				if (days.size() == 0)
+					return null;
+			}
 			PMF edgePMF = Util.getPMF(from, timeOfDay, days, null);
 			if (edgePMF == null)
 				return null;
 			if (Util.predictionMethod == PredictionMethod.Interpolated) {
-				Double actualTime = Util.GetActualEdgeTravelTime(from, (Calendar)startTime.clone());
+				Double actualTime = Util.GetActualEdgeTravelTime(from, (Calendar)queryTime.clone());
 				if (actualTime == null)
 					return null;
 				edgePMF = edgePMF.Interpolate(actualTime, Util.alpha);

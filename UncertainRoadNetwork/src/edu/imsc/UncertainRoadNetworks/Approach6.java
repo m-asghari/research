@@ -16,7 +16,7 @@ public class Approach6 {
 	
 
 	public static PMF GenerateModel(String[] sensorList, String tod, 
-			ArrayList<Integer> days, Calendar startTime) throws SQLException, ParseException, IOException{
+			ArrayList<Integer> days, Calendar queryTime) throws SQLException, ParseException, IOException{
 		Calendar startCal1, startCal2, endCal1, endCal2;
 		long p_PassedMillis = 0, l_passedMillis = 0, pl_passedMillis = 0;
 		
@@ -35,6 +35,10 @@ public class Approach6 {
 			startCal1 = Calendar.getInstance();
 			//ArrayList<Double> transitionProb = Util.congChangeProb.get(new Pair<String, String>(prev, from));
 			ArrayList<Double> transitionProb = PathData.GetCongTrans(prev, from);
+			if (Util.predictionMethod == PredictionMethod.Filtered) {
+				days = Util.FilterDays(days, from, (Calendar)queryTime.clone());
+				if (days.size() == 0) return null;
+			}
 			PMF edgeCongPMF = Util.getPMF(from, tod, days, true);
 			PMF edgeNormPMF = Util.getPMF(from, tod, days, false);
 			if (edgeCongPMF == null && edgeNormPMF == null)
@@ -45,7 +49,7 @@ public class Approach6 {
 				edgeNormPMF = new PMF(0, 0);
 			
 			if (Util.predictionMethod == PredictionMethod.Interpolated) {
-				Double actualTime = Util.GetActualEdgeTravelTime(from, (Calendar)startTime.clone());
+				Double actualTime = Util.GetActualEdgeTravelTime(from, (Calendar)queryTime.clone());
 				if (actualTime == null) {
 					return null;
 				}

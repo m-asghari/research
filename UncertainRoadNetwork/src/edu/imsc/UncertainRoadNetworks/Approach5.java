@@ -23,9 +23,12 @@ public class Approach5 {
 		startCal1 = Calendar.getInstance();
 		for (int s = 0; s < sensorList.length - 1; ++s) {
 			String from = sensorList[s];
+			if (Util.predictionMethod == PredictionMethod.Filtered) {
+				days = Util.FilterDays(days, from, (Calendar)queryTime.clone());
+				if (days.size() == 0) return null;
+			}
 			ArrayList<Double> travelTimes = PathData.GetTravelTimes(from, tod, days, null);
-			if (travelTimes.size() == 0)
-				return null;
+			if (travelTimes.size() == 0) return null;
 			allTravelTimes.put(from, travelTimes);
 		}
 		endCal1 = Calendar.getInstance();

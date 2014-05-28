@@ -20,6 +20,10 @@ public class Approach1 {
 		for (int s = 0; s < sensorList.length - 1; ++s) {
 			String from = sensorList[s];
 			startCal1 = Calendar.getInstance();
+			if (Util.predictionMethod == PredictionMethod.Filtered) {
+				days = Util.FilterDays(days, from, (Calendar)queryTime.clone());
+				if (days.size() == 0) return null;
+			}
 			NormalDist edgeDist = Util.getNormalDist(from, timeOfDay, days);
 			if (edgeDist == null) {
 				Util.no_model++;
