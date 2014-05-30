@@ -19,6 +19,7 @@ public class Approach2 {
 		PMF retPMF = new PMF();
 		for (int s = 0; s < sensorList.length - 1; ++s) {
 			String from = sensorList[s];
+			Util.Log("From:" + from);
 			startCal1 = Calendar.getInstance();
 			if (Util.predictionMethod == PredictionMethod.Filtered) {
 				days = Util.FilterDays(days, from, (Calendar)queryTime.clone());
@@ -26,6 +27,7 @@ public class Approach2 {
 					return null;
 			}
 			PMF edgePMF = Util.getPMF(from, timeOfDay, days, null);
+			Util.Log("Edge PMF: " + edgePMF.toString());
 			if (edgePMF == null)
 				return null;
 			if (Util.predictionMethod == PredictionMethod.Interpolated) {
@@ -45,6 +47,7 @@ public class Approach2 {
 				newPMF.prob.put(b, sum);
 			}
 			newPMF.Adjust();
+			Util.Log("New PMF: " + newPMF.toString());
 			retPMF = newPMF;
 			endCal2 = Calendar.getInstance();
 			p_PassedMillis += endCal2.getTimeInMillis() - startCal2.getTimeInMillis();

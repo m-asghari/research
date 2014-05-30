@@ -44,11 +44,17 @@ public class GenerateLinkCorrelations {
 				for (int startHour : startHours) {
 					Util.path = inputFiles.get(startHour).getSecond().readLine();
 					Util.pathNumber = String.format("%d00%d", startHour, pathN);
-					Statement stm = Util.conn.createStatement();
-					String query = "drop table path" + Util.pathNumber + "_edge_correlations";
-					stm.execute(query);
-					stm.close();
+					try {
+						Statement stm = Util.conn.createStatement();
+						String query = "drop table path" + Util.pathNumber + "_edge_correlations";
+						stm.execute(query);
+						stm.close();
+					}
+					catch (Exception e) {
+						System.out.println(e.getMessage());
+					}					
 					GenerateForPath();
+					System.out.print("Done with table PATH" + Util.pathNumber + "_EDGE_CORRELATIONS\n");
 				}
 			}
 			for (int startHour : startHours) {
@@ -107,11 +113,13 @@ public class GenerateLinkCorrelations {
 			}
 			if (pair.equals(f2tPair)) {
 				f2tCnt++;
-				fCnt++;
+				//fCnt++;
+				tCnt++;
 			}
 			if (pair.equals(t2fPair)) {
 				t2fCnt++;
-				tCnt++;
+				//tCnt++;
+				fCnt++;
 			}
 			if (pair.equals(t2tPair)) {
 				t2tCnt++;

@@ -24,10 +24,11 @@ public class Main {
 		pathNums.put(new Pair<String, String>("p", "links"), new Pair<Integer, Integer>(0, 50));
 		pathNums.put(new Pair<String, String>("r", "links"), new Pair<Integer, Integer>(50, 100));
 		pathNums.put(new Pair<String, String>("p", "paths"), new Pair<Integer, Integer>(100, 110));
-		pathNums.put(new Pair<String, String>("r", "paths"), new Pair<Integer, Integer>(110, 120));
+		//pathNums.put(new Pair<String, String>("r", "paths"), new Pair<Integer, Integer>(110, 120));
+		pathNums.put(new Pair<String, String>("r", "paths"), new Pair<Integer, Integer>(120, 125));
 		String linkType = "r";
 		String pathType = "paths";
-		String distType = "Approach7";
+		String distType = "Approach4";
 		int minPath = pathNums.get(new Pair<String, String>(linkType, pathType)).getFirst();
 		int maxPath = pathNums.get(new Pair<String, String>(linkType, pathType)).getSecond();
 		//int[] startHours = new int[] {7, 8, 15, 16, 17};
@@ -36,9 +37,8 @@ public class Main {
 		int[] predictionTimes = new int[] {0, 5, 10, 15, 30, 60, 90, 115};
 		//int[] predictionTimes = new int[] {0};
 		
-		/*Util.p_passedMillis = 0; Util.l_passedMillis = 0; Util.pl_passedMillis = 0;
-		Util.p_timeCounter = 0; Util.l_timeCounter = 0; Util.pl_timeCounter = 0;
-		try {
+		
+		/*try {
 			HashMap<Integer, Pair<FileReader, BufferedReader>> inputFiles = new HashMap<Integer, Pair<FileReader,BufferedReader>>();
 			for (int startHour : startHours) {
 				String filename = String.format("%s_%s%d00.txt", pathType, linkType, startHour-1);
@@ -56,14 +56,17 @@ public class Main {
 					Util.pathNumber = String.format("%d00%d", startHour-1, pathN);
 					crps_results.put(Util.pathNumber, new ArrayList<Double>());
 					ev_results.put(Util.pathNumber, new ArrayList<Double>());
-					PathData.LoadEdgePatterns();
-					PathData.LoadEdgeCorrelations();
-					//Util.Initialize();
+					if (startHour == 8 || startHour == 16) {
+						PathData.LoadEdgePatterns();
+						PathData.LoadEdgeCorrelations();
+					}
 					for (int predictionTime : predictionTimes) {
-						RunExperiment(startHour, PredictionMethod.Historic, predictionTime);
+						RunExperiment(startHour, PredictionMethod.NoPrediction, predictionTime);
 						System.out.println(String.format("Finished Path%d at startHour %d prediction time %d" , pathN, startHour, predictionTime));
 					}
-					PathData.Reset();
+					if (startHour == 9 || startHour == 18) {
+						PathData.Reset();
+					}
 				}				
 			}
 			WriteResultsToFile(crps_results, String.format("crps_results_%s_%s_Historic_%s.csv", pathType, linkType, distType));
@@ -88,6 +91,52 @@ public class Main {
 				BufferedReader br = new BufferedReader(fr);
 				inputFiles.put(startHour, new Pair<FileReader, BufferedReader>(fr, br));
 			}
+			crps_results = new HashMap<String, ArrayList<Double>>();
+			ev_results = new HashMap<String, ArrayList<Double>>();
+			int pathN = minPath;
+			while (pathN < maxPath) {
+				pathN++;
+				for (int startHour : startHours) {
+					Util.path = inputFiles.get(startHour).getSecond().readLine();
+					Util.pathNumber = String.format("%d00%d", startHour-1, pathN);
+					crps_results.put(Util.pathNumber, new ArrayList<Double>());
+					ev_results.put(Util.pathNumber, new ArrayList<Double>());
+					if (startHour == 8 || startHour == 16) {
+						PathData.LoadEdgePatterns();
+						//PathData.LoadEdgeCorrelations();
+					}
+					//Util.Initialize();
+					for (int predictionTime : predictionTimes) {
+						RunExperiment(startHour, PredictionMethod.Historic, predictionTime);
+						System.out.println(String.format("Finished Path%d at startHour %d prediction time %d" , pathN, startHour, predictionTime));
+					}
+					if (startHour == 9 || startHour == 18) {
+						PathData.Reset();
+					}
+				}				
+			}
+			WriteResultsToFile(crps_results, String.format("crps_results_%s_%s_Historic_%s.csv", pathType, linkType, distType));
+			WriteResultsToFile(ev_results, String.format("ev_results_%s_%s_Historic_%s.csv", pathType, linkType, distType));
+			WriteStatsToFile(String.format("stats_%s_%s_Historic_%s.csv", pathType, linkType, distType));
+			for (int startHour : startHours) {
+				inputFiles.get(startHour).getSecond().close();
+				inputFiles.get(startHour).getFirst().close();
+			}
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		Util.p_passedMillis = 0; Util.l_passedMillis = 0; Util.pl_passedMillis = 0;
+		Util.p_timeCounter = 0; Util.l_timeCounter = 0; Util.pl_timeCounter = 0;
+		try {
+			HashMap<Integer, Pair<FileReader, BufferedReader>> inputFiles = new HashMap<Integer, Pair<FileReader,BufferedReader>>();
+			for (int startHour : startHours) {
+				String filename = String.format("%s_%s%d00.txt", pathType, linkType, startHour-1);
+				FileReader fr = new FileReader(filename);
+				BufferedReader br = new BufferedReader(fr);
+				inputFiles.put(startHour, new Pair<FileReader, BufferedReader>(fr, br));
+			}
 			double[] simThresholds = new double[] {0.01, 0.02, 0.03, 0.04, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 1};
 			crps_results = new HashMap<String, ArrayList<Double>>();
 			ev_results = new HashMap<String, ArrayList<Double>>();
@@ -99,8 +148,10 @@ public class Main {
 					Util.pathNumber = String.format("%d00%d", startHour-1, pathN);
 					crps_results.put(Util.pathNumber, new ArrayList<Double>());
 					ev_results.put(Util.pathNumber, new ArrayList<Double>());
-					PathData.LoadEdgePatterns();
-					PathData.LoadEdgeCorrelations();
+					if (startHour == 8 || startHour == 16) {
+						PathData.LoadEdgePatterns();
+						//PathData.LoadEdgeCorrelations();
+					}
 					//Util.Initialize();
 					for (int predictionTime : predictionTimes) {
 						Double similarity = 0.1;
@@ -110,7 +161,9 @@ public class Main {
 							System.out.println(String.format("Finished Path%d at startHour %d with threshold %f and predictionTime %d" , pathN, startHour, similarity, predictionTime));
 						//}
 					}
-					PathData.Reset();
+					if (startHour == 9 || startHour == 18) {
+						PathData.Reset();
+					}
 				}				
 			}
 			WriteResultsToFile(crps_results, String.format("crps_results_%s_%s_Filtered_%s.csv", pathType, linkType, distType));
@@ -125,7 +178,7 @@ public class Main {
 			e.printStackTrace();
 		}
 		
-		/*Util.p_passedMillis = 0; Util.l_passedMillis = 0; Util.pl_passedMillis = 0;
+		Util.p_passedMillis = 0; Util.l_passedMillis = 0; Util.pl_passedMillis = 0;
 		Util.p_timeCounter = 0; Util.l_timeCounter = 0; Util.pl_timeCounter = 0;
 		try {
 			HashMap<Integer, Pair<FileReader, BufferedReader>> inputFiles = new HashMap<Integer, Pair<FileReader,BufferedReader>>();
@@ -146,8 +199,10 @@ public class Main {
 					Util.pathNumber = String.format("%d00%d", startHour-1, pathN);
 					crps_results.put(Util.pathNumber, new ArrayList<Double>());
 					ev_results.put(Util.pathNumber, new ArrayList<Double>());
-					PathData.LoadEdgePatterns();
-					PathData.LoadEdgeCorrelations();
+					if (startHour == 8 || startHour == 16) {
+						PathData.LoadEdgePatterns();
+						//PathData.LoadEdgeCorrelations();
+					}
 					//Util.Initialize();
 					for (int predictionTime : predictionTimes) {
 						/*for (double alpha : alphas) {
@@ -155,7 +210,7 @@ public class Main {
 							Util.Log(String.format("Finished Path%d at startHour %d with alpha %f and predictionTime %d" , pathN, startHour, alpha, predictionTime));
 							RunExperiment(startHour, PredictionMethod.Interpolated, predictionTime);
 							System.out.println(String.format("Finished Path%d at startHour %d with alpha %f and predictionTime %d" , pathN, startHour, alpha, predictionTime));
-						}
+						}*/
 						Util.timeHorizon = 60.0;
 						Double alpha = (Util.timeHorizon - predictionTime) / Util.timeHorizon;
 						if (alpha < 0.0) alpha = 0.0;
@@ -163,7 +218,9 @@ public class Main {
 						RunExperiment(startHour, PredictionMethod.Interpolated, predictionTime);
 						System.out.println(String.format("Finished Path%d at startHour %d with alpha %f and predictionTime %d" , pathN, startHour, alpha, predictionTime));
 					}
-					PathData.Reset();
+					if (startHour == 9 || startHour == 18) {
+						PathData.Reset();
+					}
 				}				
 			}
 			WriteResultsToFile(crps_results, String.format("crps_results_%s_%s_Interpolated_%s.csv", pathType, linkType, distType));
@@ -176,7 +233,7 @@ public class Main {
 		}
 		catch (Exception e) {
 			e.printStackTrace();
-		}*/
+		}
 	}
 	
 	public static void WriteStatsToFile(String filePath) {
@@ -253,12 +310,27 @@ public class Main {
 				PMF modelDist;
 				Double actualTime;
 				switch (Util.predictionMethod) {
+				case NoPrediction:
+					for (Calendar startTime : testDays) {
+						Calendar queryTime = Calendar.getInstance();
+						queryTime.setTime(startTime.getTime());
+						queryTime.add(Calendar.MINUTE, -predictionTime);
+						modelDist = Approach4.GenerateModel(sensorList, null, null, queryTime);
+						if (modelDist == null) continue;
+						actualTime = Approach4.GenerateActual(sensorList, (Calendar)startTime.clone());
+						if (actualTime == null) continue;
+						Double score = modelDist.GetScore(actualTime);
+						totalCRPSScore += score;
+						totalEVScore += Math.abs(modelDist.mean - actualTime);
+						totalCount++;
+					}
+					break;
 				case Historic:					
 					//Calendar todCal = Calendar.getInstance();
 					//todCal.setTime(Util.timeOfDayDF.parse(timeOfDay));
 					//todCal.add(Calendar.MINUTE, predictionTime);
 					//String todStr = Util.timeOfDayDF.format(todCal.getTime());
-					modelDist = Approach7.GenerateModel(sensorList, timeOfDay, modelDays, null);
+					modelDist = Approach4.GenerateModel(sensorList, timeOfDay, modelDays, null);
 					if (modelDist == null) {
 						//Util.no_model++;
 						continue;
@@ -268,7 +340,7 @@ public class Main {
 						//Calendar predictionCal = Calendar.getInstance();
 						//predictionCal.setTime(startTime.getTime());
 						//predictionCal.add(Calendar.MINUTE, predictionTime);
-						actualTime = Approach7.GenerateActual(sensorList, (Calendar)startTime.clone());
+						actualTime = Approach4.GenerateActual(sensorList, (Calendar)startTime.clone());
 						if (actualTime == null) {
 							//Util.no_actual++;
 							continue;
@@ -282,14 +354,15 @@ public class Main {
 					break;
 				case Filtered:
 					for (Calendar startTime : testDays) {
+						String str = Util.oracleDF.format(startTime.getTime());
 						Calendar queryTime = Calendar.getInstance();
 						queryTime.setTime(startTime.getTime());
 						queryTime.add(Calendar.MINUTE, -predictionTime);
 						//String predictionTOD = Util.timeOfDayDF.format(predictionCal.getTime());
 						//ArrayList<Integer> filteredDays = Util.FilterDays(modelDays, sensorList[0], (Calendar)queryTime.clone());
-						modelDist = Approach7.GenerateModel(sensorList, timeOfDay, modelDays, (Calendar)queryTime.clone());
+						modelDist = Approach4.GenerateModel(sensorList, timeOfDay, modelDays, (Calendar)queryTime.clone());
 						if (modelDist == null) continue;
-						actualTime = Approach7.GenerateActual(sensorList, (Calendar)startTime.clone());
+						actualTime = Approach4.GenerateActual(sensorList, (Calendar)startTime.clone());
 						if (actualTime == null) continue;
 						Double score = modelDist.GetScore(actualTime);
 						totalCRPSScore += score;
@@ -303,12 +376,12 @@ public class Main {
 						queryTime.setTime(startTime.getTime());
 						queryTime.add(Calendar.MINUTE, -predictionTime);
 						//String predictionTOD = Util.timeOfDayDF.format(predictionCal.getTime());
-						modelDist = Approach7.GenerateModel(sensorList, timeOfDay, modelDays, (Calendar)queryTime.clone());
+						modelDist = Approach4.GenerateModel(sensorList, timeOfDay, modelDays, (Calendar)queryTime.clone());
 						if (modelDist == null) {
 							Util.model++;
 							continue;
 						}
-						actualTime = Approach7.GenerateActual(sensorList, (Calendar)startTime.clone());
+						actualTime = Approach4.GenerateActual(sensorList, (Calendar)startTime.clone());
 						if (actualTime == null) {
 							Util.actual++;
 							continue;

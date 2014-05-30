@@ -39,6 +39,8 @@ public class Approach7 {
 			ArrayList<Double> transitionProbs = PathData.GetCongTrans(prev, from);
 			String prevTime = "";
 			PMF prevCongPMF = null, prevNormPMF = null;
+			int largestCongMax = Integer.MIN_VALUE, smallestCongMin = Integer.MAX_VALUE;
+			int largestNormMax = Integer.MIN_VALUE, smallestNormMin = Integer.MAX_VALUE;
 			for (int i = prevMin; i <= prevMax; ++i) {
 				Calendar cal = Calendar.getInstance();
 				cal.setTime(Util.timeOfDayDF.parse(tod));
@@ -61,6 +63,10 @@ public class Approach7 {
 						return null;
 					if (edgeCongPMF == null) edgeCongPMF = new PMF(0, 0);
 					if (edgeNormPMF == null) edgeNormPMF = new PMF(0, 0);
+					largestNormMax = (edgeNormPMF.max > largestNormMax) ? edgeNormPMF.max : largestNormMax;
+					smallestNormMin = (edgeNormPMF.min < smallestNormMin) ? edgeNormPMF.min : smallestNormMin;
+					largestCongMax = (edgeCongPMF.max > largestCongMax) ? edgeCongPMF.max : largestCongMax;
+					smallestCongMin = (edgeCongPMF.min < smallestCongMin) ? edgeCongPMF.min : smallestCongMin;
 					prevCongPMF = (PMF) edgeCongPMF.clone();
 					prevNormPMF = (PMF) edgeNormPMF.clone();
 					prevTime = time;
@@ -79,7 +85,7 @@ public class Approach7 {
 				edgeCongPMFs.put(i, edgeCongPMF);
 			}
 			endCal1 = Calendar.getInstance();
-			PMF newCongPMF = new PMF(prevMin + edgeCongPMFs.get(prevMin).min, prevMax + edgeCongPMFs.get(prevMax).max);
+			PMF newCongPMF = new PMF(prevMin + smallestCongMin, prevMax + largestCongMax);
 			startCal2 = Calendar.getInstance();
 			for (int b = newCongPMF.min; b <= newCongPMF.max; b += PMF.binWidth) {
 				Double sum = 0.0;
@@ -91,7 +97,7 @@ public class Approach7 {
 			}
 			newCongPMF.Adjust();
 			congPMF = newCongPMF;
-			PMF newNormPMF = new PMF(prevMin + edgeNormPMFs.get(prevMin).min, prevMax + edgeNormPMFs.get(prevMax).max);
+			PMF newNormPMF = new PMF(prevMin + smallestNormMin, prevMax + largestNormMax);
 			for (int b = newNormPMF.min; b <= newNormPMF.max; b += PMF.binWidth) {
 				Double sum = 0.0;
 				for (int h = prevMin; h <= prevMax; h += PMF.binWidth) {

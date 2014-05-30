@@ -33,7 +33,7 @@ public class Util {
 	public static String path = "";
 	public static String pathNumber = "";
 	
-	public static enum PredictionMethod {Historic, Filtered, Interpolated};
+	public static enum PredictionMethod {Historic, Filtered, Interpolated, NoPrediction};
 	public static PredictionMethod predictionMethod = PredictionMethod.Historic;
 	public static Double similarityThreshold;
 	public static Double alpha;
@@ -93,6 +93,7 @@ public class Util {
 	public static PMF getPMF(String from, String tod,
 			ArrayList<Integer> days, Boolean cong) throws SQLException, ParseException{
 		ArrayList<Double> travelTimes = PathData.GetTravelTimes(from, tod, days, cong);
+		//Util.Log(String.format("From: %s, Cong: %s, TravelTimes: %s", from, (cong == null) ? "null" : cong.toString(), travelTimes.toString()));
 		if (travelTimes.size() == 0) {
 			return null;
 		}
@@ -138,9 +139,26 @@ public class Util {
 			}
 			int second = RoundDouble(edgeTravelTime, 1);
 			currentTime.add(Calendar.SECOND, second);
-			String test = Util.oracleDF.format(currentTime.getTime());
 			travelTime += edgeTravelTime;			
 		}		
+		return travelTime;
+	}
+	
+	public static Double GetSnapshotTravelTime(String[] sensorList, Calendar startTime) {
+		Double travelTime = 0.0;
+		for (int i = 0; i < sensorList.length - 1; ++i) {
+			String from = sensorList[i];
+			try {
+				Double edgeTravelTime = GetActualEdgeTravelTime(from, RoundTimeDown((Calendar)startTime.clone()));
+				if (edgeTravelTime == null) {
+					return null;
+				}
+				travelTime += edgeTravelTime;
+			}
+			catch (Exception e) {
+				System.out.print(e.getMessage());
+			}
+		}
 		return travelTime;
 	}
 	

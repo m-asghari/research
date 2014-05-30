@@ -145,9 +145,11 @@ public class PMF {
 		Double sum = 0.0;
 		for (Entry<Integer, Double> e : this.prob.entrySet()) {
 			if (e.getValue().equals(0.0)) continue;
-			sb.append(String.format("P(%d): %f\t", e.getKey(), e.getValue()));
+			//sb.append(String.format("P(%d): %f\t", e.getKey(), e.getValue()));
 			sum += e.getValue();
 		}
+		sb.append("Min: " + Integer.toString(this.min) + "\t");
+		sb.append("Max: " + Integer.toString(this.max) + "\t");
 		sb.append("Expected Value: " + Double.toString(this.ExpectedValue()) + "\t");
 		sb.append("Sum: " + Double.toString(sum));
 		return sb.toString();

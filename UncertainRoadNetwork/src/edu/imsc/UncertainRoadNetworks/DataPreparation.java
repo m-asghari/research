@@ -161,8 +161,8 @@ public class DataPreparation {
 				BufferedReader br = new BufferedReader(fr);
 				inputFiles.put(startHour, new Pair<FileReader, BufferedReader>(fr, br));
 			}
-			int pathN = 110;
-			while (pathN < 120) {
+			int pathN = 120;
+			while (pathN < 125) {
 				pathN++;
 				for (String startHour : startHours) {
 					Util.pathNumber = startHour + Integer.toString(pathN);					

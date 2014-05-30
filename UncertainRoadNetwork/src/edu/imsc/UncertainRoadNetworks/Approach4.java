@@ -31,6 +31,7 @@ public class Approach4 {
 			HashMap<Integer, PMF> edgePMFs = new HashMap<Integer, PMF>();
 			String prevTime = "";
 			PMF prevPMF = null;
+			int largestMax = Integer.MIN_VALUE, smallestMin = Integer.MAX_VALUE;
 			for (int i = min; i <= max; i+=PMF.binWidth) {
 				Calendar cal = Calendar.getInstance();
 				cal.setTime(Util.timeOfDayDF.parse(tod));
@@ -54,10 +55,12 @@ public class Approach4 {
 					if (alpha < 0.0) alpha = 0.0;
 					edgePMF = edgePMF.Interpolate(currTravelTime, alpha);
 				}
+				largestMax = (edgePMF.max > largestMax) ? edgePMF.max : largestMax;
+				smallestMin = (edgePMF.min < smallestMin) ? edgePMF.min : smallestMin;
 				edgePMFs.put(i, edgePMF);
 			}
 			endCal1 = Calendar.getInstance();
-			PMF newPMF = new PMF(retPMF.min + edgePMFs.get(min).min, retPMF.max + edgePMFs.get(max).max);
+			PMF newPMF = new PMF(retPMF.min + smallestMin, retPMF.max + largestMax);
 			startCal2 = Calendar.getInstance();
 			for (int b = newPMF.min; b <= newPMF.max; b+=PMF.binWidth) {
 				Double sum = 0.0;
