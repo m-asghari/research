@@ -6,7 +6,7 @@ import java.util.Map.Entry;
 
 public class PMF {
 	public static int binWidth = 15;
-	public static Double cutOff = 0.000001;
+	public static Double cutOff = 0.001;
 	
 	public int min;
 	public int max;

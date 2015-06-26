@@ -31,9 +31,11 @@ public class Approach7 {
 		for (int s = 1; s < sensorList.length - 1; ++s) {
 			String prev = sensorList[s-1];
 			String from = sensorList[s];
+			//Util.Log("From: " + from);
 			startCal1 = Calendar.getInstance();
 			int prevMin = Math.min(congPMF.min, normPMF.min);
 			int prevMax = Math.max(congPMF.max, normPMF.max);
+			//Util.Log(String.format("prevMin: %d, prevMax: %d", prevMin, prevMax));
 			HashMap<Integer, PMF> edgeNormPMFs = new HashMap<Integer, PMF>();
 			HashMap<Integer, PMF> edgeCongPMFs = new HashMap<Integer, PMF>();
 			ArrayList<Double> transitionProbs = PathData.GetCongTrans(prev, from);
@@ -41,7 +43,7 @@ public class Approach7 {
 			PMF prevCongPMF = null, prevNormPMF = null;
 			int largestCongMax = Integer.MIN_VALUE, smallestCongMin = Integer.MAX_VALUE;
 			int largestNormMax = Integer.MIN_VALUE, smallestNormMin = Integer.MAX_VALUE;
-			for (int i = prevMin; i <= prevMax; ++i) {
+			for (int i = prevMin; i <= prevMax; i += PMF.binWidth) {
 				Calendar cal = Calendar.getInstance();
 				cal.setTime(Util.timeOfDayDF.parse(tod));
 				cal.add(Calendar.SECOND, i);
@@ -108,6 +110,19 @@ public class Approach7 {
 			}
 			newNormPMF.Adjust();
 			normPMF = newNormPMF;
+			//Util.Log("newCongPMF: " + newCongPMF.toString());
+			//Util.Log("newNormPMF: " + newNormPMF.toString());
+			Pair<Double, Double> probs = PathData.GetLinkCongestion(from);
+			Double normProb = probs.getFirst(), congProb = probs.getSecond();
+			//Util.Log(String.format("normProb: %f, congProb: %f", normProb, congProb));
+			int min = Math.min(normPMF.min, congPMF.min);
+			int max = Math.max(normPMF.max, congPMF.max);
+			PMF newPMF = new PMF(min, max);
+			for (int i = min; i <= max; i+=PMF.binWidth) {
+				newPMF.prob.put(i, normProb*normPMF.Prob(i) + congProb*congPMF.Prob(i));
+			}
+			newPMF.Adjust();
+			//Util.Log("newPMF: " + newPMF.toString());
 			endCal2 = Calendar.getInstance();
 			p_PassedMillis += endCal2.getTimeInMillis() - startCal2.getTimeInMillis();
 			l_passedMillis += endCal1.getTimeInMillis() - startCal1.getTimeInMillis();

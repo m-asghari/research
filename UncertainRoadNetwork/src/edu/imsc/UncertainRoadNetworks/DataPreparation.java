@@ -154,15 +154,15 @@ public class DataPreparation {
 			fw = new FileWriter("linkQueries.sql");
 			bw = new BufferedWriter(fw);
 			
-			String[] startHours = new String[] {"700", "800", "1500", "1600", "1700"};
+			String[] startHours = new String[] {"2100"};
 			HashMap<String, Pair<FileReader, BufferedReader>> inputFiles = new HashMap<String, Pair<FileReader,BufferedReader>>();
 			for (String startHour : startHours) {
-				FileReader fr = new FileReader("paths_r" + startHour + ".txt");
+				FileReader fr = new FileReader("links_r" + startHour + ".txt");
 				BufferedReader br = new BufferedReader(fr);
 				inputFiles.put(startHour, new Pair<FileReader, BufferedReader>(fr, br));
 			}
-			int pathN = 120;
-			while (pathN < 125) {
+			int pathN = 50;
+			while (pathN < 100) {
 				pathN++;
 				for (String startHour : startHours) {
 					Util.pathNumber = startHour + Integer.toString(pathN);					

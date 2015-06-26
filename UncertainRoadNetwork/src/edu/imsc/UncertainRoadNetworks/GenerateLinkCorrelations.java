@@ -23,7 +23,8 @@ public class GenerateLinkCorrelations {
 		pathNums.put(new Pair<String, String>("p", "links"), new Pair<Integer, Integer>(0, 50));
 		pathNums.put(new Pair<String, String>("r", "links"), new Pair<Integer, Integer>(50, 100));
 		pathNums.put(new Pair<String, String>("p", "paths"), new Pair<Integer, Integer>(100, 110));
-		pathNums.put(new Pair<String, String>("r", "paths"), new Pair<Integer, Integer>(110, 120));
+		//pathNums.put(new Pair<String, String>("r", "paths"), new Pair<Integer, Integer>(110, 120));
+		pathNums.put(new Pair<String, String>("r", "paths"), new Pair<Integer, Integer>(120, 125));
 		String linkType = "r";
 		String pathType = "paths";
 		int[] startHours = new int[] {7, 8, 15, 16, 17};

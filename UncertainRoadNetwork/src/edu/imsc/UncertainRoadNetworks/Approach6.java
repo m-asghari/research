@@ -21,7 +21,7 @@ public class Approach6 {
 		long p_PassedMillis = 0, l_passedMillis = 0, pl_passedMillis = 0;
 		
 		startCal1 = Calendar.getInstance();
-		Util.Log("From: " + sensorList[0]);
+		//Util.Log("From: " + sensorList[0]);
 		PMF congPMF = Util.getPMF(sensorList[0], tod, days, true);
 		PMF normPMF = Util.getPMF(sensorList[0], tod, days, false);
 		endCal1 = Calendar.getInstance();
@@ -30,16 +30,15 @@ public class Approach6 {
 			return null;
 		if (congPMF == null) congPMF = new PMF(0, 0);
 		if (normPMF == null) normPMF = new PMF(0, 0);
-		Util.Log("congPMF: " + congPMF.toString());
-		Util.Log("normPMF: " + normPMF.toString());
+		//Util.Log("congPMF: " + congPMF.toString());
+		//Util.Log("normPMF: " + normPMF.toString());
 		for (int s = 1; s < sensorList.length - 1; ++s) {
 			String prev = sensorList[s-1];
 			String from = sensorList[s];
-			Util.Log("From: " + from);
+			//Util.Log("From: " + from);
 			startCal1 = Calendar.getInstance();
-			//ArrayList<Double> transitionProb = Util.congChangeProb.get(new Pair<String, String>(prev, from));
 			ArrayList<Double> transitionProb = PathData.GetCongTrans(prev, from);
-			Util.Log(String.format("Transition Probs from %s to %s: %s", prev, from, transitionProb.toString()));
+			//Util.Log(String.format("Transition Probs from %s to %s: %s", prev, from, transitionProb.toString()));
 			if (Util.predictionMethod == PredictionMethod.Filtered) {
 				days = Util.FilterDays(days, from, (Calendar)queryTime.clone());
 				if (days.size() == 0) return null;
@@ -52,8 +51,8 @@ public class Approach6 {
 				edgeCongPMF = new PMF(0, 0);
 			if (edgeNormPMF == null)
 				edgeNormPMF = new PMF(0, 0);
-			Util.Log("edgeCongPMF: " + edgeCongPMF.toString());
-			Util.Log("edgeNormPMF: " + edgeNormPMF.toString());
+			//Util.Log("edgeCongPMF: " + edgeCongPMF.toString());
+			//Util.Log("edgeNormPMF: " + edgeNormPMF.toString());
 			
 			if (Util.predictionMethod == PredictionMethod.Interpolated) {
 				Double actualTime = Util.GetActualEdgeTravelTime(from, (Calendar)queryTime.clone());
@@ -66,7 +65,7 @@ public class Approach6 {
 			endCal1 = Calendar.getInstance();
 			int prevMin = Math.min(congPMF.min, normPMF.min);
 			int prevMax = Math.max(congPMF.max, normPMF.max);
-			Util.Log(String.format("prevMin: %d, prevMax: %d", prevMin, prevMax));
+			//Util.Log(String.format("prevMin: %d, prevMax: %d", prevMin, prevMax));
 			PMF newCongPMF = new PMF(prevMin + edgeCongPMF.min, prevMax + edgeCongPMF.max);
 			startCal2 = Calendar.getInstance();
 			for (int b = newCongPMF.min; b <= newCongPMF.max; b+=PMF.binWidth) {
@@ -88,13 +87,13 @@ public class Approach6 {
 			}
 			newCongPMF.Adjust();
 			newNormPMF.Adjust();
-			Util.Log("newCongPMF: " + newCongPMF.toString());
-			Util.Log("newNormPMF: " + newNormPMF.toString());
+			//Util.Log("newCongPMF: " + newCongPMF.toString());
+			//Util.Log("newNormPMF: " + newNormPMF.toString());
 			congPMF = newCongPMF;
 			normPMF = newNormPMF;
 			Pair<Double, Double> probs = PathData.GetLinkCongestion(from);
 			Double normProb = probs.getFirst(), congProb = probs.getSecond();
-			Util.Log(String.format("normProb: %f, congProb: %f", normProb, congProb));
+			//Util.Log(String.format("normProb: %f, congProb: %f", normProb, congProb));
 			int min = Math.min(normPMF.min, congPMF.min);
 			int max = Math.max(normPMF.max, congPMF.max);
 			PMF newPMF = new PMF(min, max);
@@ -102,7 +101,7 @@ public class Approach6 {
 				newPMF.prob.put(i, normProb*normPMF.Prob(i) + congProb*congPMF.Prob(i));
 			}
 			newPMF.Adjust();
-			Util.Log("newPMF: " + newPMF.toString());
+			//Util.Log("newPMF: " + newPMF.toString());
 			endCal2 = Calendar.getInstance();
 			p_PassedMillis += endCal2.getTimeInMillis() - startCal2.getTimeInMillis();
 			l_passedMillis += endCal1.getTimeInMillis() - startCal1.getTimeInMillis();
