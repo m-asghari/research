@@ -28,7 +28,7 @@ public class Main {
 		pathNums.put(new Pair<String, String>("r", "paths"), new Pair<Integer, Integer>(120, 125));
 		String linkType = "r";
 		String pathType = "paths";
-		String distType = "Approach2";
+		String distType = "Approach4";
 		int minPath = pathNums.get(new Pair<String, String>(linkType, pathType)).getFirst();
 		int maxPath = pathNums.get(new Pair<String, String>(linkType, pathType)).getSecond();
 		int[] startHours = new int[] {8, 9, 16, 17, 18};
@@ -137,7 +137,8 @@ public class Main {
 				BufferedReader br = new BufferedReader(fr);
 				inputFiles.put(startHour, new Pair<FileReader, BufferedReader>(fr, br));
 			}
-			double[] simThresholds = new double[] {0.01, 0.02, 0.03, 0.04, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 1};
+			//double[] simThresholds = new double[] {0.01, 0.02, 0.03, 0.04, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 1};
+			double[] simThresholds = new double[] {0.01, 0.05, 0.1, 0.5, 1};
 			crps_results = new HashMap<String, ArrayList<Double>>();
 			ev_results = new HashMap<String, ArrayList<Double>>();
 			int pathN = minPath;
@@ -189,7 +190,8 @@ public class Main {
 				BufferedReader br = new BufferedReader(fr);
 				inputFiles.put(startHour, new Pair<FileReader, BufferedReader>(fr, br));
 			}
-			double[] alphas = new double[] {0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1};
+			//double[] alphas = new double[] {0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1};
+			double[] alphas = new double[] {0, 0.3, 0.6, 0.9};
 			double[] timeHorizons = new double[] {15, 30, 60, 90, 120};
 			crps_results = new HashMap<String, ArrayList<Double>>();
 			ev_results = new HashMap<String, ArrayList<Double>>();
@@ -320,9 +322,9 @@ public class Main {
 						Calendar queryTime = Calendar.getInstance();
 						queryTime.setTime(startTime.getTime());
 						queryTime.add(Calendar.MINUTE, -predictionTime);
-						modelDist = Approach2.GenerateModel(sensorList, null, null, queryTime);
+						modelDist = Approach4.GenerateModel(sensorList, null, null, queryTime);
 						if (modelDist == null) continue;
-						actualTime = Approach2.GenerateActual(sensorList, (Calendar)startTime.clone());
+						actualTime = Approach4.GenerateActual(sensorList, (Calendar)startTime.clone());
 						if (actualTime == null) continue;
 						Double score = modelDist.GetScore(actualTime);
 						totalCRPSScore += score;
@@ -335,7 +337,7 @@ public class Main {
 					//todCal.setTime(Util.timeOfDayDF.parse(timeOfDay));
 					//todCal.add(Calendar.MINUTE, predictionTime);
 					//String todStr = Util.timeOfDayDF.format(todCal.getTime());
-					modelDist = Approach2.GenerateModel(sensorList, timeOfDay, modelDays, null);
+					modelDist = Approach4.GenerateModel(sensorList, timeOfDay, modelDays, null);
 					if (modelDist == null) {
 						//Util.no_model++;
 						continue;
@@ -345,7 +347,7 @@ public class Main {
 						//Calendar predictionCal = Calendar.getInstance();
 						//predictionCal.setTime(startTime.getTime());
 						//predictionCal.add(Calendar.MINUTE, predictionTime);
-						actualTime = Approach2.GenerateActual(sensorList, (Calendar)startTime.clone());
+						actualTime = Approach4.GenerateActual(sensorList, (Calendar)startTime.clone());
 						if (actualTime == null) {
 							//Util.no_actual++;
 							continue;
@@ -365,9 +367,9 @@ public class Main {
 						queryTime.add(Calendar.MINUTE, -predictionTime);
 						//String predictionTOD = Util.timeOfDayDF.format(predictionCal.getTime());
 						//ArrayList<Integer> filteredDays = Util.FilterDays(modelDays, sensorList[0], (Calendar)queryTime.clone());
-						modelDist = Approach2.GenerateModel(sensorList, timeOfDay, modelDays, (Calendar)queryTime.clone());
+						modelDist = Approach4.GenerateModel(sensorList, timeOfDay, modelDays, (Calendar)queryTime.clone());
 						if (modelDist == null) continue;
-						actualTime = Approach2.GenerateActual(sensorList, (Calendar)startTime.clone());
+						actualTime = Approach4.GenerateActual(sensorList, (Calendar)startTime.clone());
 						if (actualTime == null) continue;
 						Double score = modelDist.GetScore(actualTime);
 						totalCRPSScore += score;
@@ -381,12 +383,12 @@ public class Main {
 						queryTime.setTime(startTime.getTime());
 						queryTime.add(Calendar.MINUTE, -predictionTime);
 						//String predictionTOD = Util.timeOfDayDF.format(predictionCal.getTime());
-						modelDist = Approach2.GenerateModel(sensorList, timeOfDay, modelDays, (Calendar)queryTime.clone());
+						modelDist = Approach4.GenerateModel(sensorList, timeOfDay, modelDays, (Calendar)queryTime.clone());
 						if (modelDist == null) {
 							Util.model++;
 							continue;
 						}
-						actualTime = Approach2.GenerateActual(sensorList, (Calendar)startTime.clone());
+						actualTime = Approach4.GenerateActual(sensorList, (Calendar)startTime.clone());
 						if (actualTime == null) {
 							Util.actual++;
 							continue;

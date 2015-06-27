@@ -78,8 +78,9 @@ public class Approach7 {
 					if (currTravelTime == null) {
 						return null;
 					}
-					Double alpha = Util.alpha - (double)i/(Util.timeHorizon*60);
-					if (alpha < 0.0) alpha = 0.0;
+					Double alpha = Util.alpha;
+					//Double alpha = Util.alpha - (double)i/(Util.timeHorizon*60);
+					//if (alpha < 0.0) alpha = 0.0;
 					edgeNormPMF = edgeNormPMF.Interpolate(currTravelTime, alpha);
 					edgeCongPMF = edgeCongPMF.Interpolate(currTravelTime, alpha);
 				}
